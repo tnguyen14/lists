@@ -61,6 +61,18 @@ module.exports = async function (fastify, opts) {
     })
   );
 
+  // if list does not exist, data would be `undefined`
+  // if list is empty, data would be `{}`, or check `snapshot.exists`
+  async function getList(type, name) {
+    const listRef = listsRef.doc(`${type}!${name}`);
+    const listSnapshot = await listRef.get();
+    return {
+      ref: listRef,
+      snapshot: listSnapshot,
+      data: listSnapshot.data(),
+    };
+  }
+
   fastify.post(
     "/",
     handleRequest(async (request, user) => {
@@ -70,14 +82,13 @@ module.exports = async function (fastify, opts) {
         }
       }
       const { type, name } = request.body;
-      const listRef = listsRef.doc(`${type}!${name}`);
-      const listSnapshot = await listRef.get();
-      if (listSnapshot.exists) {
+      const { ref, data } = await getList(type, name);
+      if (data) {
         throw fastify.httpErrors.conflict(
           `List "${name}" of type "${type}" already exists`
         );
       }
-      await listRef.create({
+      await ref.create({
         type,
         name,
         admins: [user.sub],
@@ -90,20 +101,27 @@ module.exports = async function (fastify, opts) {
     "/:type/:name",
     handleRequest(async (request, user) => {
       const { type, name } = request.params;
-      const listRef = listsRef.doc(`${type}!${name}`);
-      const listSnapshot = await listRef.get();
-      if (!listSnapshot.exists) {
-        throw fastify.httpErrors.notFound(`"${name} is not found."`);
+      const { ref, data } = await getList(type, name);
+      if (!data) {
+        throw fastify.httpErrors.notFound(`"${name}" is not found.`);
       }
-      const list = listSnapshot.data();
-      if (!list.admins.includes(user.sub)) {
+      if (!data.admins.includes(user.sub)) {
         throw fastify.httpErrors.unauthorized(
           "user is not authorized to perform deletion of list"
         );
       }
       // @TODO use firestore.deleteCollection to delete the items collection
-      await listRef.delete();
+      await ref.delete();
       return { success: true };
+    })
+  );
+
+  fastify.get(
+    "/:type/:name",
+    handleRequest(async (request, user) => {
+      const { type, name } = request.params;
+      const { ref, data } = await getList(type, name);
+      return data;
     })
   );
 };
