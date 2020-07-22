@@ -91,10 +91,18 @@ module.exports = async function (fastify, opts) {
     handleRequest(async (request, user) => {
       const { type, name } = request.params;
       const listRef = listsRef.doc(`${type}!${name}`);
+      const listSnapshot = await listRef.get();
+      if (!listSnapshot.exists) {
+        throw fastify.httpErrors.notFound(`"${name} is not found."`);
+      }
+      const list = listSnapshot.data();
+      if (!list.admins.includes(user.sub)) {
+        throw fastify.httpErrors.unauthorized(
+          "user is not authorized to perform deletion of list"
+        );
+      }
       // @TODO use firestore.deleteCollection to delete the items collection
       await listRef.delete();
-      // this method will return {success: true} even if
-      // the list does not exist
       return { success: true };
     })
   );
