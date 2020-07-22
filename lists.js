@@ -50,14 +50,37 @@ module.exports = async function (fastify, opts) {
     };
   }
 
+  // get lists that belongs to a user
+  async function getLists(user) {
+    const ref = listsRef.where("admins", "array-contains", user);
+    const snapshot = await ref.get();
+    return {
+      ref,
+      snapshot,
+      data: snapshot.docs.map((doc) => doc.data()),
+    };
+  }
   // get all lists
   fastify.get(
     "/",
     handleRequest(async (request, user) => {
-      const listsSnapshot = await listsRef
-        .where("admins", "array-contains", user.sub)
-        .get();
-      return listsSnapshot.docs.map((listDoc) => listDoc.data());
+      const { data } = await getLists(user.sub);
+      return data;
+    })
+  );
+
+  // delete all lists of user
+  fastify.delete(
+    "/",
+    handleRequest(async (request, user) => {
+      const { snapshot } = await getLists(user.sub);
+      await Promise.all(
+        snapshot.docs.map(async (doc) => {
+          await doc.ref.delete();
+        })
+      );
+
+      return { success: true };
     })
   );
 
