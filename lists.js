@@ -85,4 +85,17 @@ module.exports = async function (fastify, opts) {
       return { success: true };
     })
   );
+
+  fastify.delete(
+    "/:type/:name",
+    handleRequest(async (request, user) => {
+      const { type, name } = request.params;
+      const listRef = listsRef.doc(`${type}!${name}`);
+      // @TODO use firestore.deleteCollection to delete the items collection
+      await listRef.delete();
+      // this method will return {success: true} even if
+      // the list does not exist
+      return { success: true };
+    })
+  );
 };
