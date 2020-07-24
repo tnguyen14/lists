@@ -139,12 +139,52 @@ module.exports = async function (fastify, opts) {
     })
   );
 
+  // @TODO might wanna check authorization here
   fastify.get(
     "/:type/:name",
     handleRequest(async (request, user) => {
       const { type, name } = request.params;
       const { ref, data } = await getList(type, name);
       return data;
+    })
+  );
+
+  async function getItem(listType, listName, itemId) {
+    const { ref: listRef, data: listData } = await getList(listType, listName);
+    if (!listData) {
+      throw fastify.httpErrors.notFound(`list "${listName} is not found"`);
+    }
+    const itemRef = listRef.collection("items").doc(itemId);
+    const itemSnapshot = await itemRef.get();
+    return {
+      ref: itemRef,
+      snapshot: itemSnapshot,
+      data: itemSnapshot.data(),
+      listRef,
+      listData,
+    };
+  }
+
+  fastify.post(
+    "/:type/:name",
+    handleRequest(async (request, user) => {
+      const { type, name, item } = request.params;
+      if (!item.id) {
+        throw fastify.httpErrors.badRequest(`"item.id" is required`);
+      }
+      const { ref: itemRef, data: itemData, listData } = await getItem(
+        type,
+        name,
+        item.id
+      );
+      if (!listData.admins.includes(user.sub)) {
+        throw fastify.httpErrors.unauthorized(
+          "user is not authorized to perform action"
+        );
+      }
+      if (itemData) {
+        throw fastify.httpErrors.conflict(`Item "${item.id}" already exists`);
+      }
     })
   );
 };

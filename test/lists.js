@@ -16,7 +16,13 @@ server.addHook("preHandler", (request, reply, done) => {
 });
 
 test("lists", (t) => {
-  t.tearDown(async () => await server.close());
+  t.tearDown(async () => {
+    await server.inject({
+      method: "DELETE",
+      url: "/",
+    });
+    await server.close();
+  });
   t.test("clean up any existing list", async (t) => {
     try {
       const resp = await server.inject({
@@ -40,5 +46,48 @@ test("lists", (t) => {
       t.error(e);
     }
   });
+
+  t.test("create a list", async (t) => {
+    try {
+      const resp = await server.inject({
+        method: "POST",
+        url: "/",
+        payload: {
+          type: "testType",
+          name: "listName",
+        },
+      });
+      t.deepEqual(resp.json(), { success: true });
+      const get = await server.inject({
+        method: "GET",
+        url: "/testType/listName",
+      });
+      t.match(get.json(), { admins: ["testuser"] });
+    } catch (e) {
+      t.error(e);
+    }
+  });
+
+  t.test("create a duplicate", async (t) => {
+    try {
+      const resp = await server.inject({
+        method: "POST",
+        url: "/",
+        payload: {
+          type: "testType",
+          name: "listName",
+        },
+      });
+      t.match(resp.json(), {
+        statusCode: 409,
+        error: "Conflict",
+        message: /List "listName" of type "testType" already exists/,
+      });
+    } catch (e) {
+      t.error(e);
+    }
+  });
+
+  t.test("");
   t.end();
 });
