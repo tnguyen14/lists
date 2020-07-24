@@ -88,6 +88,44 @@ test("lists", (t) => {
     }
   });
 
-  t.test("");
+  t.test("check getting a list by a different user");
+
+  t.test("add item to list", async (t) => {
+    try {
+      const resp = await server.inject({
+        method: "POST",
+        url: "/testType/listName",
+        payload: {
+          id: "testItem",
+          prop: "testProp",
+        },
+      });
+      t.deepEqual(resp.json(), { success: true });
+      const getList = await server.inject({
+        method: "GET",
+        url: "/testType/listName/items",
+      });
+      t.deepEqual(getList.json(), [{ id: "testItem", prop: "testProp" }]);
+    } catch (e) {
+      t.error(e);
+    }
+  });
+  t.test("delete a list", async (t) => {
+    try {
+      const resp = await server.inject({
+        method: "DELETE",
+        url: "/testType/listName",
+      });
+      t.deepEqual(resp.json(), { success: true });
+      const lists = await server.inject({
+        method: "GET",
+        url: "/",
+      });
+      t.deepEqual(lists.json(), []);
+    } catch (e) {
+      t.error(e);
+    }
+  });
+
   t.end();
 });

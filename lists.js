@@ -86,13 +86,17 @@ module.exports = async function (fastify, opts) {
 
   // if list does not exist, data would be `undefined`
   // if list is empty, data would be `{}`, or check `snapshot.exists`
-  async function getList(type, name) {
-    const listRef = listsRef.doc(`${type}!${name}`);
-    const listSnapshot = await listRef.get();
+  async function getList(user, type, name) {
+    const ref = listsRef.doc(`${type}!${name}`);
+    const snapshot = await ref.get();
+    const data = snapshot.data();
+    if (snapshot.exists && !data.admins.includes(user)) {
+      throw fastify.httpErrors.unauthorized("user is not authorized for list");
+    }
     return {
-      ref: listRef,
-      snapshot: listSnapshot,
-      data: listSnapshot.data(),
+      ref,
+      snapshot,
+      data,
     };
   }
 
@@ -105,7 +109,7 @@ module.exports = async function (fastify, opts) {
         }
       }
       const { type, name } = request.body;
-      const { ref, data } = await getList(type, name);
+      const { ref, data } = await getList(user.sub, type, name);
       if (data) {
         throw fastify.httpErrors.conflict(
           `List "${name}" of type "${type}" already exists`
@@ -124,7 +128,7 @@ module.exports = async function (fastify, opts) {
     "/:type/:name",
     handleRequest(async (request, user) => {
       const { type, name } = request.params;
-      const { ref, data } = await getList(type, name);
+      const { ref, data } = await getList(user.sub, type, name);
       if (!data) {
         throw fastify.httpErrors.notFound(`"${name}" is not found.`);
       }
@@ -133,58 +137,75 @@ module.exports = async function (fastify, opts) {
           "user is not authorized to perform deletion of list"
         );
       }
-      // @TODO use firestore.deleteCollection to delete the items collection
+      await firestore.deleteCollection(`lists/${type}!${name}/items`);
       await ref.delete();
       return { success: true };
     })
   );
 
-  // @TODO might wanna check authorization here
+  async function getItem(user, listType, listName, itemId) {
+    const { ref: listRef } = await getList(user, listType, listName);
+    const ref = listRef.collection("items").doc(itemId);
+    const snapshot = await ref.get();
+    return {
+      ref,
+      snapshot,
+      data: snapshot.data(),
+    };
+  }
+
+  async function getItems(user, listType, listName) {
+    const { ref: listRef } = await getList(user, listType, listName);
+    const ref = listRef.collection("items");
+    const snapshot = await ref.get();
+
+    return {
+      ref,
+      snapshot,
+      data: snapshot.docs.map((doc) => doc.data()),
+    };
+  }
+
   fastify.get(
     "/:type/:name",
     handleRequest(async (request, user) => {
       const { type, name } = request.params;
-      const { ref, data } = await getList(type, name);
+      const { ref, data } = await getList(user.sub, type, name);
       return data;
     })
   );
 
-  async function getItem(listType, listName, itemId) {
-    const { ref: listRef, data: listData } = await getList(listType, listName);
-    if (!listData) {
-      throw fastify.httpErrors.notFound(`list "${listName} is not found"`);
-    }
-    const itemRef = listRef.collection("items").doc(itemId);
-    const itemSnapshot = await itemRef.get();
-    return {
-      ref: itemRef,
-      snapshot: itemSnapshot,
-      data: itemSnapshot.data(),
-      listRef,
-      listData,
-    };
-  }
-
   fastify.post(
     "/:type/:name",
     handleRequest(async (request, user) => {
-      const { type, name, item } = request.params;
+      const { type, name } = request.params;
+      const item = request.body;
       if (!item.id) {
         throw fastify.httpErrors.badRequest(`"item.id" is required`);
       }
-      const { ref: itemRef, data: itemData, listData } = await getItem(
+      const { ref: itemRef, snapshot, data: itemData } = await getItem(
+        user.sub,
         type,
         name,
         item.id
       );
-      if (!listData.admins.includes(user.sub)) {
-        throw fastify.httpErrors.unauthorized(
-          "user is not authorized to perform action"
-        );
-      }
       if (itemData) {
         throw fastify.httpErrors.conflict(`Item "${item.id}" already exists`);
       }
+      await itemRef.create({
+        ...item,
+      });
+      return { success: true };
+    })
+  );
+
+  fastify.get(
+    "/:type/:name/items",
+    handleRequest(async (request, user) => {
+      const { type, name } = request.params;
+
+      const { data } = await getItems(user.sub, type, name);
+      return data;
     })
   );
 };
