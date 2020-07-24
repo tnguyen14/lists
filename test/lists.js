@@ -88,7 +88,18 @@ test("lists", (t) => {
     }
   });
 
-  t.test("check getting a list by a different user");
+  t.test("check getting a list by a different user", async (t) => {
+    try {
+      // assume there's a list read!tri owned by a different user
+      const resp = await server.inject({
+        method: "GET",
+        url: "/read/tri",
+      });
+      t.match(resp.json(), { statusCode: 401, error: "Unauthorized" });
+    } catch (e) {
+      t.error(e);
+    }
+  });
 
   t.test("add item to list", async (t) => {
     try {
@@ -110,6 +121,7 @@ test("lists", (t) => {
       t.error(e);
     }
   });
+
   t.test("delete a list", async (t) => {
     try {
       const resp = await server.inject({
