@@ -5,7 +5,7 @@ require("dotenv").config();
 // I don't think it quite make sense to store this in the list doc.
 // might want to create a separate metadata db/ store
 const publicAccess = {
-  GET: ["/read/*"],
+  GET: ["/read/.*/items"],
 };
 
 const server = require("@tridnguyen/fastify-server")({
