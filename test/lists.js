@@ -15,16 +15,30 @@ server.addHook("preHandler", (request, reply, done) => {
   done();
 });
 
-test("clean up any existing list", async (t) => {
+test("lists", (t) => {
   t.tearDown(async () => await server.close());
+  t.test("clean up any existing list", async (t) => {
+    try {
+      const resp = await server.inject({
+        method: "DELETE",
+        url: "/",
+      });
+      t.deepEqual(resp.json(), { success: true });
+    } catch (e) {
+      t.error(e);
+    }
+  });
 
-  try {
-    const resp = await server.inject({
-      method: "DELETE",
-      url: "/",
-    });
-    t.deepEqual(resp.json(), { success: true });
-  } catch (e) {
-    t.error(e);
-  }
+  t.test("empty lists at beginning", async (t) => {
+    try {
+      const resp = await server.inject({
+        method: "GET",
+        url: "/",
+      });
+      t.deepEqual(resp.json(), [], "there should be no list at the beginning");
+    } catch (e) {
+      t.error(e);
+    }
+  });
+  t.end();
 });
