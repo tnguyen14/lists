@@ -183,7 +183,7 @@ module.exports = async function (fastify, opts) {
       if (!item.id) {
         throw fastify.httpErrors.badRequest(`"item.id" is required`);
       }
-      const { ref: itemRef, snapshot, data: itemData } = await getItem(
+      const { ref: itemRef, data: itemData } = await getItem(
         user.sub,
         type,
         name,
