@@ -2,8 +2,6 @@ const firestore = require("@tridnguyen/firestore");
 
 const listsRef = firestore.collection("lists");
 
-const requiredParams = ["type", "name"];
-
 module.exports = async function (fastify, opts) {
   function getUser(request) {
     const user = request.user;
@@ -100,6 +98,18 @@ module.exports = async function (fastify, opts) {
     };
   }
 
+  const requiredParams = ["type", "name"];
+
+  /*
+   * list interface
+   * {
+   *   "type": <string>,
+   *   "name": <string>,
+   *   "admins": <array>,
+   *   "read": "private" | "public"
+   * }
+   */
+
   fastify.post(
     "/",
     handleRequest(async (request, user) => {
@@ -108,7 +118,7 @@ module.exports = async function (fastify, opts) {
           throw fastify.httpErrors.badRequest(`"${requiredParam}" is required`);
         }
       }
-      const { type, name } = request.body;
+      const { type, name, read } = request.body;
       const { ref, data } = await getList(user.sub, type, name);
       if (data) {
         throw fastify.httpErrors.conflict(
@@ -119,6 +129,7 @@ module.exports = async function (fastify, opts) {
         type,
         name,
         admins: [user.sub],
+        read: read || "private",
       });
       return { success: true };
     })
