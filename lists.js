@@ -219,4 +219,32 @@ module.exports = async function (fastify, opts) {
       return data;
     })
   );
+
+  fastify.get(
+    "/:type/:name/items/:id",
+    handleRequest(async (request) => {
+      const { user, params } = request;
+      const { type, name, id } = params;
+
+      const { ref, data } = await getItem(user, type, name, id);
+      if (!data) {
+        throw fastify.httpErrors.notFound(`"${id}" is not found.`);
+      }
+      return data;
+    })
+  );
+
+  fastify.delete(
+    "/:type/:name/items/:id",
+    handleRequest(async (request) => {
+      const { user, params } = request;
+      const { type, name, id } = params;
+      const { ref, data } = await getItem(user, type, name, id);
+      if (!data) {
+        throw fastify.httpErrors.notFound(`"${id}" is not found.`);
+      }
+      await ref.delete();
+      return { success: true };
+    })
+  );
 };

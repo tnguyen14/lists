@@ -123,6 +123,43 @@ test("lists", (t) => {
     }
   });
 
+  t.test("retrieve item from list", async (t) => {
+    try {
+      const resp = await server.inject({
+        method: "GET",
+        url: "/testType/listName/items/testItem",
+      });
+      t.deepEqual(resp.json(), {
+        id: "testItem",
+        prop: "testProp",
+      });
+    } catch (e) {
+      t.error(e);
+    }
+  });
+
+  t.test("delete item", async (t) => {
+    try {
+      const resp = await server.inject({
+        method: "DELETE",
+        url: "/testType/listName/items/testItem",
+      });
+      t.deepEqual(resp.json(), { success: true });
+
+      const getItem = await server.inject({
+        method: "GET",
+        url: "/testType/listName/items/testitem",
+      });
+      t.deepEqual(getItem.json(), {
+        statusCode: 404,
+        error: "Not Found",
+        message: '"testitem" is not found.',
+      });
+    } catch (e) {
+      t.error(e);
+    }
+  });
+
   t.test("delete a list", async (t) => {
     try {
       const resp = await server.inject({
