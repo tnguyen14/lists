@@ -2,17 +2,9 @@ const firestore = require("@tridnguyen/firestore");
 
 const listsRef = firestore.collection("lists");
 
-module.exports = async function (fastify, opts) {
-  function getUser(request) {
-    const user = request.user;
-
-    if (!user) {
-      throw fastify.httpErrors.badRequest("No user supplied");
-    }
-
-    /*
-     * example user
-     *
+/*
+ * example user
+ *
 {
   given_name: 'Tri D.',
   family_name: 'Nguyen',
@@ -31,15 +23,12 @@ module.exports = async function (fastify, opts) {
   at_hash: 'ssDYjGXWsj-zGXr6tMgJ5A',
   nonce: 'w0b5xKhP0all8p0471MmV~YfztqpYQyw'
 }
-     */
-    return user;
-  }
-
+ */
+module.exports = async function (fastify, opts) {
   function handleRequest(fn) {
     return async (request, reply) => {
       try {
-        const user = getUser(request, reply);
-        const response = await fn(request, user);
+        const response = await fn(request);
         reply.send(response);
       } catch (e) {
         console.error(e);
@@ -50,7 +39,7 @@ module.exports = async function (fastify, opts) {
 
   // get lists that belongs to a user
   async function getLists(user) {
-    const ref = listsRef.where("admins", "array-contains", user);
+    const ref = listsRef.where("admins", "array-contains", user.sub);
     const snapshot = await ref.get();
     return {
       ref,
@@ -61,8 +50,9 @@ module.exports = async function (fastify, opts) {
   // get all lists
   fastify.get(
     "/",
-    handleRequest(async (request, user) => {
-      const { data } = await getLists(user.sub);
+    handleRequest(async (request) => {
+      const { user } = request;
+      const { data } = await getLists(user);
       return data;
     })
   );
@@ -70,8 +60,9 @@ module.exports = async function (fastify, opts) {
   // delete all lists of user
   fastify.delete(
     "/",
-    handleRequest(async (request, user) => {
-      const { snapshot } = await getLists(user.sub);
+    handleRequest(async (request) => {
+      const { user } = request;
+      const { snapshot } = await getLists(user);
       await Promise.all(
         snapshot.docs.map(async (doc) => {
           await doc.ref.delete();
@@ -91,7 +82,7 @@ module.exports = async function (fastify, opts) {
     if (
       snapshot.exists &&
       data.read != "public" &&
-      !data.admins.includes(user)
+      !data.admins.includes(user.sub)
     ) {
       throw fastify.httpErrors.unauthorized("user is not authorized for list");
     }
@@ -116,14 +107,15 @@ module.exports = async function (fastify, opts) {
 
   fastify.post(
     "/",
-    handleRequest(async (request, user) => {
+    handleRequest(async (request) => {
+      const { user } = request;
       for (const requiredParam of requiredParams) {
         if (!request.body[requiredParam]) {
           throw fastify.httpErrors.badRequest(`"${requiredParam}" is required`);
         }
       }
       const { type, name, read } = request.body;
-      const { ref, data } = await getList(user.sub, type, name);
+      const { ref, data } = await getList(user, type, name);
       if (data) {
         throw fastify.httpErrors.conflict(
           `List "${name}" of type "${type}" already exists`
@@ -141,9 +133,10 @@ module.exports = async function (fastify, opts) {
 
   fastify.delete(
     "/:type/:name",
-    handleRequest(async (request, user) => {
-      const { type, name } = request.params;
-      const { ref, data } = await getList(user.sub, type, name);
+    handleRequest(async (request) => {
+      const { user, params } = request;
+      const { type, name } = params;
+      const { ref, data } = await getList(user, type, name);
       if (!data) {
         throw fastify.httpErrors.notFound(`"${name}" is not found.`);
       }
@@ -183,23 +176,25 @@ module.exports = async function (fastify, opts) {
 
   fastify.get(
     "/:type/:name",
-    handleRequest(async (request, user) => {
-      const { type, name } = request.params;
-      const { ref, data } = await getList(user.sub, type, name);
+    handleRequest(async (request) => {
+      const { user, params } = request;
+      const { type, name } = params;
+      const { ref, data } = await getList(user, type, name);
       return data;
     })
   );
 
   fastify.post(
     "/:type/:name",
-    handleRequest(async (request, user) => {
-      const { type, name } = request.params;
+    handleRequest(async (request) => {
+      const { user, params } = request;
+      const { type, name } = params;
       const item = request.body;
       if (!item.id) {
         throw fastify.httpErrors.badRequest(`"item.id" is required`);
       }
       const { ref: itemRef, data: itemData } = await getItem(
-        user.sub,
+        user,
         type,
         name,
         item.id
@@ -216,10 +211,11 @@ module.exports = async function (fastify, opts) {
 
   fastify.get(
     "/:type/:name/items",
-    handleRequest(async (request, user) => {
-      const { type, name } = request.params;
+    handleRequest(async (request) => {
+      const { user, params } = request;
+      const { type, name } = params;
 
-      const { data } = await getItems(user.sub, type, name);
+      const { data } = await getItems(user, type, name);
       return data;
     })
   );

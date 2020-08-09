@@ -90,10 +90,11 @@ test("lists", (t) => {
 
   t.test("check getting a list by a different user", async (t) => {
     try {
-      // assume there's a list read!tri owned by a different user
+      // the list testType!listName2 is already created
+      // and owned by a different user
       const resp = await server.inject({
         method: "GET",
-        url: "/read/tri",
+        url: "/testType/listName2",
       });
       t.match(resp.json(), { statusCode: 401, error: "Unauthorized" });
     } catch (e) {
