@@ -88,7 +88,11 @@ module.exports = async function (fastify, opts) {
     const ref = listsRef.doc(`${type}!${name}`);
     const snapshot = await ref.get();
     const data = snapshot.data();
-    if (snapshot.exists && !data.admins.includes(user)) {
+    if (
+      snapshot.exists &&
+      data.read != "public" &&
+      !data.admins.includes(user)
+    ) {
       throw fastify.httpErrors.unauthorized("user is not authorized for list");
     }
     return {
