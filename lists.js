@@ -126,7 +126,37 @@ module.exports = async function (fastify, opts) {
         name,
         admins: [user.sub],
         read: read || "private",
+        meta: request.body.meta || {},
       });
+      return { success: true };
+    })
+  );
+
+  // update list meta
+  // request.body = {
+  //   meta: {...stuff.to.update}
+  // }
+  // @TODO add ability to update admins too
+  fastify.patch(
+    "/:type/:name",
+    handleRequest(async (request) => {
+      const { user, params } = request;
+      const { type, name } = params;
+      const { ref, data } = await getList(user, type, name);
+      if (!data) {
+        throw fastify.httpErrors.notFound(`"${name}" is not found.`);
+      }
+      if (!data.admins.includes(user.sub)) {
+        throw fastify.httpErrors.unauthorized(
+          "user is not authorized to perform modification of list"
+        );
+      }
+      await ref.set(
+        {
+          meta: request.body.meta,
+        },
+        { merge: true }
+      );
       return { success: true };
     })
   );

@@ -88,6 +88,30 @@ test("lists", (t) => {
     }
   });
 
+  t.test("modify a list", async (t) => {
+    t.test("update meta", async (t) => {
+      try {
+        const resp = await server.inject({
+          method: "PATCH",
+          url: "/testType/listName",
+          payload: {
+            meta: {
+              foo: "bar",
+            },
+          },
+        });
+        t.match(resp.json(), { success: true });
+        const get = await server.inject({
+          method: "GET",
+          url: "/testType/listName",
+        });
+        t.match(get.json(), { admins: ["testuser"], meta: { foo: "bar" } });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+  });
+
   t.test("check getting a list by a different user", async (t) => {
     try {
       // the list testType!listName2 is already created
