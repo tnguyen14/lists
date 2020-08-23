@@ -131,17 +131,44 @@ test("lists", (t) => {
   });
 
   t.test("add item to list", async (t) => {
-    try {
-      const resp = await post("/testType/listName", {
-        id: "testItem",
-        prop: "testProp",
-      });
-      t.deepEqual(resp, { success: true });
-      const getResp = await get("/testType/listName/items");
-      t.deepEqual(getResp, [{ id: "testItem", prop: "testProp" }]);
-    } catch (e) {
-      t.error(e);
-    }
+    t.test("expected good", async (t) => {
+      try {
+        const resp = await post("/testType/listName", {
+          id: "testItem",
+          prop: "testProp",
+        });
+        t.deepEqual(resp, { success: true });
+        const getResp = await get("/testType/listName/items");
+        t.deepEqual(getResp, [{ id: "testItem", prop: "testProp" }]);
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("missing id", async (t) => {
+      try {
+        const resp = await post("/testType/listName", {
+          prop: "testProp",
+        });
+        t.match(resp, { statusCode: 400, error: "Bad Request" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("existing item", async (t) => {
+      try {
+        const resp = await post("/testType/listName", {
+          id: "testItem",
+          prop: "testProp",
+        });
+        t.deepEqual(resp, {
+          statusCode: 409,
+          error: "Conflict",
+          message: 'Item "testItem" already exists',
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
   });
 
   t.test("retrieve item from list", async (t) => {
@@ -157,30 +184,58 @@ test("lists", (t) => {
   });
 
   t.test("delete item", async (t) => {
-    try {
-      const resp = await del("/testType/listName/items/testItem");
-      t.deepEqual(resp, { success: true });
+    t.test("expected good", async (t) => {
+      try {
+        const resp = await del("/testType/listName/items/testItem");
+        t.deepEqual(resp, { success: true });
 
-      const getResp = await get("/testType/listName/items/testItem");
-      t.deepEqual(getResp, {
-        statusCode: 404,
-        error: "Not Found",
-        message: '"testItem" is not found.',
-      });
-    } catch (e) {
-      t.error(e);
-    }
+        const getResp = await get("/testType/listName/items/testItem");
+        t.deepEqual(getResp, {
+          statusCode: 404,
+          error: "Not Found",
+          message: '"testItem" is not found.',
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("not found item", async (t) => {
+      try {
+        const resp = await del("/testType/listName/items/testItem2");
+        t.deepEqual(resp, {
+          statusCode: 404,
+          error: "Not Found",
+          message: '"testItem2" is not found.',
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
   });
 
   t.test("delete a list", async (t) => {
-    try {
-      const resp = await del("/testType/listName");
-      t.deepEqual(resp, { success: true });
-      const getResp = await get("/");
-      t.deepEqual(getResp, []);
-    } catch (e) {
-      t.error(e);
-    }
+    t.test("list not found", async (t) => {
+      try {
+        const resp = await del("/testType/listNam");
+        t.deepEqual(resp, {
+          statusCode: 404,
+          error: "Not Found",
+          message: '"listNam" is not found.',
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("expected good", async (t) => {
+      try {
+        const resp = await del("/testType/listName");
+        t.deepEqual(resp, { success: true });
+        const getResp = await get("/");
+        t.deepEqual(getResp, []);
+      } catch (e) {
+        t.error(e);
+      }
+    });
   });
 
   t.end();
