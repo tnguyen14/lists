@@ -68,7 +68,6 @@ module.exports = async function (fastify, opts) {
           await doc.ref.delete();
         })
       );
-
       return { success: true };
     })
   );

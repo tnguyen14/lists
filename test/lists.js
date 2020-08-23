@@ -15,21 +15,49 @@ server.addHook("preHandler", (request, reply, done) => {
   done();
 });
 
+async function del(url) {
+  const resp = await server.inject({
+    method: "DELETE",
+    url,
+  });
+  return resp.json();
+}
+
+async function get(url) {
+  const resp = await server.inject({
+    method: "GET",
+    url,
+  });
+  return resp.json();
+}
+
+async function post(url, payload) {
+  const resp = await server.inject({
+    method: "POST",
+    url,
+    payload,
+  });
+  return resp.json();
+}
+
+async function patch(url, payload) {
+  const resp = await server.inject({
+    method: "PATCH",
+    url,
+    payload,
+  });
+  return resp.json();
+}
+
 test("lists", (t) => {
   t.tearDown(async () => {
-    await server.inject({
-      method: "DELETE",
-      url: "/",
-    });
+    await del("/");
     await server.close();
   });
   t.test("clean up any existing list", async (t) => {
     try {
-      const resp = await server.inject({
-        method: "DELETE",
-        url: "/",
-      });
-      t.deepEqual(resp.json(), { success: true });
+      const resp = await del("/");
+      t.deepEqual(resp, { success: true });
     } catch (e) {
       t.error(e);
     }
@@ -37,11 +65,8 @@ test("lists", (t) => {
 
   t.test("empty lists at beginning", async (t) => {
     try {
-      const resp = await server.inject({
-        method: "GET",
-        url: "/",
-      });
-      t.deepEqual(resp.json(), [], "there should be no list at the beginning");
+      const resp = await get("/");
+      t.deepEqual(resp, [], "there should be no list at the beginning");
     } catch (e) {
       t.error(e);
     }
@@ -49,20 +74,13 @@ test("lists", (t) => {
 
   t.test("create a list", async (t) => {
     try {
-      const resp = await server.inject({
-        method: "POST",
-        url: "/",
-        payload: {
-          type: "testType",
-          name: "listName",
-        },
+      const resp = await post("/", {
+        type: "testType",
+        name: "listName",
       });
-      t.deepEqual(resp.json(), { success: true });
-      const get = await server.inject({
-        method: "GET",
-        url: "/testType/listName",
-      });
-      t.match(get.json(), { admins: ["testuser"] });
+      t.deepEqual(resp, { success: true });
+      const getResp = await get("/testType/listName");
+      t.match(getResp, { admins: ["testuser"] });
     } catch (e) {
       t.error(e);
     }
@@ -70,15 +88,11 @@ test("lists", (t) => {
 
   t.test("create a duplicate", async (t) => {
     try {
-      const resp = await server.inject({
-        method: "POST",
-        url: "/",
-        payload: {
-          type: "testType",
-          name: "listName",
-        },
+      const resp = await post("/", {
+        type: "testType",
+        name: "listName",
       });
-      t.match(resp.json(), {
+      t.match(resp, {
         statusCode: 409,
         error: "Conflict",
         message: /List "listName" of type "testType" already exists/,
@@ -91,21 +105,14 @@ test("lists", (t) => {
   t.test("modify a list", async (t) => {
     t.test("update meta", async (t) => {
       try {
-        const resp = await server.inject({
-          method: "PATCH",
-          url: "/testType/listName",
-          payload: {
-            meta: {
-              foo: "bar",
-            },
+        const resp = await patch("/testType/listName", {
+          meta: {
+            foo: "bar",
           },
         });
-        t.match(resp.json(), { success: true });
-        const get = await server.inject({
-          method: "GET",
-          url: "/testType/listName",
-        });
-        t.match(get.json(), { admins: ["testuser"], meta: { foo: "bar" } });
+        t.match(resp, { success: true });
+        const getResp = await get("/testType/listName");
+        t.match(getResp, { admins: ["testuser"], meta: { foo: "bar" } });
       } catch (e) {
         t.error(e);
       }
@@ -116,11 +123,8 @@ test("lists", (t) => {
     try {
       // the list testType!listName2 is already created
       // and owned by a different user
-      const resp = await server.inject({
-        method: "GET",
-        url: "/testType/listName2",
-      });
-      t.match(resp.json(), { statusCode: 401, error: "Unauthorized" });
+      const resp = await get("/testType/listName2");
+      t.match(resp, { statusCode: 401, error: "Unauthorized" });
     } catch (e) {
       t.error(e);
     }
@@ -128,20 +132,13 @@ test("lists", (t) => {
 
   t.test("add item to list", async (t) => {
     try {
-      const resp = await server.inject({
-        method: "POST",
-        url: "/testType/listName",
-        payload: {
-          id: "testItem",
-          prop: "testProp",
-        },
+      const resp = await post("/testType/listName", {
+        id: "testItem",
+        prop: "testProp",
       });
-      t.deepEqual(resp.json(), { success: true });
-      const getList = await server.inject({
-        method: "GET",
-        url: "/testType/listName/items",
-      });
-      t.deepEqual(getList.json(), [{ id: "testItem", prop: "testProp" }]);
+      t.deepEqual(resp, { success: true });
+      const getResp = await get("/testType/listName/items");
+      t.deepEqual(getResp, [{ id: "testItem", prop: "testProp" }]);
     } catch (e) {
       t.error(e);
     }
@@ -149,11 +146,8 @@ test("lists", (t) => {
 
   t.test("retrieve item from list", async (t) => {
     try {
-      const resp = await server.inject({
-        method: "GET",
-        url: "/testType/listName/items/testItem",
-      });
-      t.deepEqual(resp.json(), {
+      const resp = await get("/testType/listName/items/testItem");
+      t.deepEqual(resp, {
         id: "testItem",
         prop: "testProp",
       });
@@ -164,20 +158,14 @@ test("lists", (t) => {
 
   t.test("delete item", async (t) => {
     try {
-      const resp = await server.inject({
-        method: "DELETE",
-        url: "/testType/listName/items/testItem",
-      });
-      t.deepEqual(resp.json(), { success: true });
+      const resp = await del("/testType/listName/items/testItem");
+      t.deepEqual(resp, { success: true });
 
-      const getItem = await server.inject({
-        method: "GET",
-        url: "/testType/listName/items/testitem",
-      });
-      t.deepEqual(getItem.json(), {
+      const getResp = await get("/testType/listName/items/testItem");
+      t.deepEqual(getResp, {
         statusCode: 404,
         error: "Not Found",
-        message: '"testitem" is not found.',
+        message: '"testItem" is not found.',
       });
     } catch (e) {
       t.error(e);
@@ -186,16 +174,10 @@ test("lists", (t) => {
 
   t.test("delete a list", async (t) => {
     try {
-      const resp = await server.inject({
-        method: "DELETE",
-        url: "/testType/listName",
-      });
-      t.deepEqual(resp.json(), { success: true });
-      const lists = await server.inject({
-        method: "GET",
-        url: "/",
-      });
-      t.deepEqual(lists.json(), []);
+      const resp = await del("/testType/listName");
+      t.deepEqual(resp, { success: true });
+      const getResp = await get("/");
+      t.deepEqual(getResp, []);
     } catch (e) {
       t.error(e);
     }
