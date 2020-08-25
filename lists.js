@@ -263,6 +263,26 @@ module.exports = async function (fastify, opts) {
     })
   );
 
+  fastify.patch(
+    "/:type/:name/items/:id",
+    handleRequest(async (request) => {
+      const { user, params } = request;
+      const { type, name, id } = params;
+
+      const { ref, data } = await getItem(user, type, name, id);
+      if (!data) {
+        throw fastify.httpErrors.notFound(`"${id}" is not found.`);
+      }
+      await ref.set(
+        {
+          ...request.body,
+        },
+        { merge: true }
+      );
+      return { success: true };
+    })
+  );
+
   fastify.delete(
     "/:type/:name/items/:id",
     handleRequest(async (request) => {

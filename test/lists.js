@@ -183,6 +183,26 @@ test("lists", (t) => {
     }
   });
 
+  t.test("update item", async (t) => {
+    t.test("expected good", async (t) => {
+      try {
+        const resp = await patch("/testType/listName/items/testItem", {
+          prop: "testProp2",
+          newProp: "anotherProp",
+        });
+        t.deepEqual(resp, { success: true });
+        const getResp = await get("/testType/listName/items/testItem");
+        t.deepEqual(getResp, {
+          id: "testItem",
+          prop: "testProp2",
+          newProp: "anotherProp",
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+  });
+
   t.test("delete item", async (t) => {
     t.test("expected good", async (t) => {
       try {
