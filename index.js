@@ -12,7 +12,11 @@ const server = require("@tridnguyen/fastify-server")({
   // logger: true,
   auth0Domain: process.env.AUTH0_DOMAIN,
   auth0ClientId: process.env.AUTH0_CLIENT_ID,
-  allowedOrigins: ["https://lab.tridnguyen.com", "https://tridnguyen.com"],
+  allowedOrigins: [
+    "https://lab.tridnguyen.com",
+    "https://tridnguyen.com",
+    "https://cbtallc.com",
+  ],
   shouldPerformJwtCheck: (request) => {
     if (publicAccess[request.method]) {
       for (const path of publicAccess[request.method]) {
