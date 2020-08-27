@@ -72,6 +72,32 @@ test("lists", (t) => {
     }
   });
 
+  t.test("get list that doesn't exist", async (t) => {
+    try {
+      const resp = await get("/testType/unknownList");
+      t.deepEqual(resp, {
+        statusCode: 404,
+        error: "Not Found",
+        message: "Not Found",
+      });
+    } catch (e) {
+      t.error(e);
+    }
+  });
+
+  t.test("get items from list that doesn't exist", async (t) => {
+    try {
+      const resp = await get("/test/unknown/items");
+      t.deepEqual(resp, {
+        statusCode: 404,
+        error: "Not Found",
+        message: "Not Found",
+      });
+    } catch (e) {
+      t.error(e);
+    }
+  });
+
   t.test("create a list", async (t) => {
     try {
       const resp = await post("/", {

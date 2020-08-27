@@ -192,7 +192,14 @@ module.exports = async function (fastify, opts) {
   }
 
   async function getItems(user, listType, listName) {
-    const { ref: listRef } = await getList(user, listType, listName);
+    const { ref: listRef, data: listData } = await getList(
+      user,
+      listType,
+      listName
+    );
+    if (!listData) {
+      throw fastify.httpErrors.notFound();
+    }
     const ref = listRef.collection("items");
     const snapshot = await ref.get();
 
@@ -209,6 +216,9 @@ module.exports = async function (fastify, opts) {
       const { user, params } = request;
       const { type, name } = params;
       const { ref, data } = await getList(user, type, name);
+      if (!data) {
+        throw fastify.httpErrors.notFound();
+      }
       return data;
     })
   );
