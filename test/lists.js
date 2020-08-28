@@ -129,16 +129,20 @@ test("lists", (t) => {
   });
 
   t.test("modify a list", async (t) => {
-    t.test("update meta", async (t) => {
+    t.test("update list", async (t) => {
       try {
         const resp = await patch("/testType/listName", {
           meta: {
             foo: "bar",
           },
+          admins: ["testuser", "testuser2"],
         });
         t.match(resp, { success: true });
         const getResp = await get("/testType/listName");
-        t.match(getResp, { admins: ["testuser"], meta: { foo: "bar" } });
+        t.match(getResp, {
+          admins: ["testuser", "testuser2"],
+          meta: { foo: "bar" },
+        });
       } catch (e) {
         t.error(e);
       }
@@ -147,9 +151,9 @@ test("lists", (t) => {
 
   t.test("check getting a list by a different user", async (t) => {
     try {
-      // the list testType!listName2 is already created
+      // the list testType!preExisting is already created
       // and owned by a different user
-      const resp = await get("/testType/listName2");
+      const resp = await get("/testType/preExisting");
       t.match(resp, { statusCode: 401, error: "Unauthorized" });
     } catch (e) {
       t.error(e);

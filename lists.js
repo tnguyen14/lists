@@ -135,7 +135,6 @@ module.exports = async function (fastify, opts) {
   // request.body = {
   //   meta: {...stuff.to.update}
   // }
-  // @TODO add ability to update admins too
   fastify.patch(
     "/:type/:name",
     handleRequest(async (request) => {
@@ -150,12 +149,14 @@ module.exports = async function (fastify, opts) {
           "user is not authorized to perform modification of list"
         );
       }
-      await ref.set(
-        {
-          meta: request.body.meta,
-        },
-        { merge: true }
-      );
+      const updatedList = {};
+      if (request.body.meta) {
+        updatedList.meta = request.body.meta;
+      }
+      if (request.body.admins) {
+        updatedList.admins = request.body.admins;
+      }
+      await ref.set(updatedList, { merge: true });
       return { success: true };
     })
   );
