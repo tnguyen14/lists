@@ -4,7 +4,7 @@ const server = require("@tridnguyen/fastify-server")({
   shouldPerformJwtCheck: false,
 });
 
-server.register(require("../lists"));
+server.register(require("../routes"));
 
 // is preHandler the right hook for this?
 // https://www.fastify.io/docs/latest/Hooks

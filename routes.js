@@ -161,6 +161,7 @@ module.exports = async function (fastify, opts) {
     })
   );
 
+  async function deleteList() {}
   fastify.delete(
     "/:type/:name",
     handleRequest(async (request) => {

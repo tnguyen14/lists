@@ -34,7 +34,7 @@ server.setErrorHandler((err, request, reply) => {
   reply.send(err);
 });
 
-server.register(require("./lists"));
+server.register(require("./routes"));
 
 async function start() {
   const port = process.env.PORT || 3000;
