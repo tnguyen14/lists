@@ -69,6 +69,7 @@ async function updateList(user, type, name, payload) {
       updatedList[prop] = payload[prop];
     }
   }
+  console.log(updatedList);
   await ref.set(updatedList, { merge: true });
   return { success: true };
 }
