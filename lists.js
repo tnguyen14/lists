@@ -1,5 +1,6 @@
 const firestore = require("@tridnguyen/firestore");
 const listsRef = firestore.collection("lists");
+const chunk = require("lodash.chunk");
 
 const httpErrors = require("fastify-sensible/lib/httpErrors");
 
@@ -69,7 +70,6 @@ async function updateList(user, type, name, payload) {
       updatedList[prop] = payload[prop];
     }
   }
-  console.log(updatedList);
   await ref.set(updatedList, { merge: true });
   return { success: true };
 }
@@ -121,6 +121,24 @@ async function getItem(user, listType, listName, itemId) {
   };
 }
 
+async function addItemsBulk(user, listType, listName, items) {
+  const { ref: listRef } = await getList(user, listType, listName);
+  // @TODO check if items already exist?
+  const chunks = chunk(items, firestore.batchSize);
+  await Promise.all(
+    chunks.map(async (chunk) => {
+      const writeBatch = firestore.batch();
+
+      chunk.forEach((item) => {
+        const itemRef = listRef.collection("items").doc(item.id);
+        writeBatch.set(itemRef, item);
+      });
+      await writeBatch.commit();
+    })
+  );
+  return { success: true };
+}
+
 module.exports = {
   getLists,
   getList,
@@ -129,4 +147,5 @@ module.exports = {
   deleteList,
   getItems,
   getItem,
+  addItemsBulk,
 };
