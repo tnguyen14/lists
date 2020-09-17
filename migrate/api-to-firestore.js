@@ -35,18 +35,18 @@ const listsToMigrate = [
 const user = jwt.decode(apiToken);
 
 async function migrateList({ type: listType, name: listName }) {
-  const [list, items] = await Promise.all([
-    getJson(`${apiServer}/${listType}/${listName}`, {
-      headers: {
-        Authorization: `Bearer ${apiToken}`,
-      },
-    }),
-    getJson(`${apiServer}/${listType}/${listName}/items`, {
-      headers: {
-        Authorization: `Bearer ${apiToken}`,
-      },
-    }),
-  ]);
+  const [list, items] = await Promise.all(
+    [
+      `${apiServer}/${listType}/${listName}`,
+      `${apiServer}/${listType}/${listName}/items`,
+    ].map((url) =>
+      getJson(url, {
+        headers: {
+          Authorization: `Bearer ${apiToken}`,
+        },
+      })
+    )
+  );
   const listId = `${listType}!${listName}`;
   console.log(`Migrating list ${listId}`);
   // list might not exist - wrap in try/catch
