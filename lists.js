@@ -36,7 +36,7 @@ async function getList(user, type, name) {
 
 async function createList(user, type, name, payload) {
   const { ref, data } = await getList(user, type, name);
-  const { read, meta } = payload;
+  const { read, meta } = payload || {};
   if (data) {
     throw httpErrors.conflict(
       `List "${name}" of type "${type}" already exists`
@@ -49,6 +49,27 @@ async function createList(user, type, name, payload) {
     read: read || "private",
     meta: meta || {},
   });
+  return { success: true };
+}
+
+async function updateList(user, type, name, payload) {
+  const { ref, data } = await getList(user, type, name);
+  if (!data) {
+    throw httpErrors.notFound(`"${name}" is not found.`);
+  }
+  if (!data.admins.includes(user.sub)) {
+    throw httpErrors.unauthorized(
+      "user is not authorized to perform modification of list"
+    );
+  }
+  const updatedList = {};
+  const updateProps = ["meta", "admins", "read"];
+  for (const prop of updateProps) {
+    if (payload[prop]) {
+      updatedList[prop] = payload[prop];
+    }
+  }
+  await ref.set(updatedList, { merge: true });
   return { success: true };
 }
 
@@ -103,6 +124,7 @@ module.exports = {
   getLists,
   getList,
   createList,
+  updateList,
   deleteList,
   getItems,
   getItem,

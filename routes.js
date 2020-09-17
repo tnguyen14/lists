@@ -6,6 +6,7 @@ const {
   getLists,
   getList,
   createList,
+  updateList,
   deleteList,
   getItems,
   getItem,
@@ -106,26 +107,9 @@ module.exports = async function (fastify, opts) {
   fastify.patch(
     "/:type/:name",
     handleRequest(async (request) => {
-      const { user, params } = request;
+      const { user, params, body } = request;
       const { type, name } = params;
-      const { ref, data } = await getList(user, type, name);
-      if (!data) {
-        throw fastify.httpErrors.notFound(`"${name}" is not found.`);
-      }
-      if (!data.admins.includes(user.sub)) {
-        throw fastify.httpErrors.unauthorized(
-          "user is not authorized to perform modification of list"
-        );
-      }
-      const updatedList = {};
-      if (request.body.meta) {
-        updatedList.meta = request.body.meta;
-      }
-      if (request.body.admins) {
-        updatedList.admins = request.body.admins;
-      }
-      await ref.set(updatedList, { merge: true });
-      return { success: true };
+      return await updateList(user, type, name, body);
     })
   );
 
