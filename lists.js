@@ -1,6 +1,7 @@
 const firestore = require("@tridnguyen/firestore");
-
 const listsRef = firestore.collection("lists");
+
+const httpErrors = require("fastify-sensible/lib/httpErrors");
 
 // get lists that belongs to a user
 async function getLists(user) {
@@ -24,12 +25,29 @@ async function getList(user, type, name) {
     data.read != "public" &&
     !data.admins.includes(user.sub)
   ) {
-    throw fastify.httpErrors.unauthorized("user is not authorized for list");
+    throw httpErrors.unauthorized("user is not authorized for list");
   }
   return {
     ref,
     snapshot,
     data,
+  };
+}
+
+async function deleteList(user, type, name) {
+  const { ref, data } = await getList(user, type, name);
+  if (!data) {
+    throw httpErrors.notFound(`"${name}" is not found.`);
+  }
+  if (!data.admins.includes(user.sub)) {
+    throw httpErrors.unauthorized(
+      "user is not authorized to perform deletion of list"
+    );
+  }
+  await firestore.deleteCollection(`lists/${type}!${name}/items`);
+  await ref.delete();
+  return {
+    success: true,
   };
 }
 
@@ -40,7 +58,7 @@ async function getItems(user, listType, listName) {
     listName
   );
   if (!listData) {
-    throw fastify.httpErrors.notFound();
+    throw httpErrors.notFound();
   }
   const ref = listRef.collection("items");
   const snapshot = await ref.get();
@@ -66,6 +84,7 @@ async function getItem(user, listType, listName, itemId) {
 module.exports = {
   getLists,
   getList,
+  deleteList,
   getItems,
   getItem,
 };

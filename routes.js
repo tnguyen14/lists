@@ -2,7 +2,7 @@ const firestore = require("@tridnguyen/firestore");
 
 const listsRef = firestore.collection("lists");
 
-const { getLists, getList, getItems, getItem } = require("./lists");
+const { getLists, getList, deleteList, getItems, getItem } = require("./lists");
 
 /*
  * example user
@@ -133,24 +133,13 @@ module.exports = async function (fastify, opts) {
     })
   );
 
-  async function deleteList() {}
   fastify.delete(
     "/:type/:name",
     handleRequest(async (request) => {
       const { user, params } = request;
       const { type, name } = params;
-      const { ref, data } = await getList(user, type, name);
-      if (!data) {
-        throw fastify.httpErrors.notFound(`"${name}" is not found.`);
-      }
-      if (!data.admins.includes(user.sub)) {
-        throw fastify.httpErrors.unauthorized(
-          "user is not authorized to perform deletion of list"
-        );
-      }
-      await firestore.deleteCollection(`lists/${type}!${name}/items`);
-      await ref.delete();
-      return { success: true };
+
+      return await deleteList(user, type, name);
     })
   );
 
