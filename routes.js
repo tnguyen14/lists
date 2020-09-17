@@ -2,7 +2,14 @@ const firestore = require("@tridnguyen/firestore");
 
 const listsRef = firestore.collection("lists");
 
-const { getLists, getList, deleteList, getItems, getItem } = require("./lists");
+const {
+  getLists,
+  getList,
+  createList,
+  deleteList,
+  getItems,
+  getItem,
+} = require("./lists");
 
 /*
  * example user
@@ -79,33 +86,22 @@ module.exports = async function (fastify, opts) {
   fastify.post(
     "/",
     handleRequest(async (request) => {
-      const { user } = request;
+      const { user, body } = request;
       for (const requiredParam of requiredParams) {
         if (!request.body[requiredParam]) {
           throw fastify.httpErrors.badRequest(`"${requiredParam}" is required`);
         }
       }
-      const { type, name, read } = request.body;
-      const { ref, data } = await getList(user, type, name);
-      if (data) {
-        throw fastify.httpErrors.conflict(
-          `List "${name}" of type "${type}" already exists`
-        );
-      }
-      await ref.create({
-        type,
-        name,
-        admins: [user.sub],
-        read: read || "private",
-        meta: request.body.meta || {},
-      });
-      return { success: true };
+      const { type, name } = body;
+
+      return await createList(user, type, name, body);
     })
   );
 
   // update list meta
   // request.body = {
-  //   meta: {...stuff.to.update}
+  //   meta: {...stuff.to.update},
+  //   admins: [all-admins],
   // }
   fastify.patch(
     "/:type/:name",

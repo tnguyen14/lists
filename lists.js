@@ -34,6 +34,24 @@ async function getList(user, type, name) {
   };
 }
 
+async function createList(user, type, name, payload) {
+  const { ref, data } = await getList(user, type, name);
+  const { read, meta } = payload;
+  if (data) {
+    throw httpErrors.conflict(
+      `List "${name}" of type "${type}" already exists`
+    );
+  }
+  await ref.create({
+    type,
+    name,
+    admins: [user.sub],
+    read: read || "private",
+    meta: meta || {},
+  });
+  return { success: true };
+}
+
 async function deleteList(user, type, name) {
   const { ref, data } = await getList(user, type, name);
   if (!data) {
@@ -84,6 +102,7 @@ async function getItem(user, listType, listName, itemId) {
 module.exports = {
   getLists,
   getList,
+  createList,
   deleteList,
   getItems,
   getItem,
