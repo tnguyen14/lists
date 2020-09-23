@@ -6,11 +6,10 @@ const server = require("@tridnguyen/fastify-server")({
 
 server.register(require("../routes"));
 
-// is preHandler the right hook for this?
-// https://www.fastify.io/docs/latest/Hooks
 server.addHook("preHandler", (request, reply, done) => {
+  const user = (request.body && request.body.fakeUser) || "testuser";
   request.user = {
-    sub: "testuser",
+    sub: user,
   };
   done();
 });
