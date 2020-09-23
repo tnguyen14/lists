@@ -105,6 +105,7 @@ test("lists", (t) => {
       });
       t.deepEqual(resp, { success: true });
       const getResp = await get("/testType/listName");
+      console.log(getResp);
       t.match(getResp, { admins: ["testuser"] });
     } catch (e) {
       t.error(e);
@@ -121,7 +122,7 @@ test("lists", (t) => {
       t.match(resp, {
         statusCode: 401,
         error: "Unauthorized",
-        message: /User is not authorized to create list/,
+        message: /user is not authorized to create list/,
       });
     } catch (e) {
       t.error(e);

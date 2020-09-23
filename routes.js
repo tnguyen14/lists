@@ -10,31 +10,11 @@ const {
   deleteList,
   getItems,
   getItem,
+  createItem,
+  updateItem,
+  deleteItem,
 } = require("./lists");
 
-const listsAdmins = ["google-oauth2|102956012089794272878", "testuser"];
-/*
- * example user
- *
-{
-  given_name: 'Tri D.',
-  family_name: 'Nguyen',
-  nickname: 'tringuyenduy',
-  name: 'Tri D. Nguyen',
-  picture: 'https://lh3.googleusercontent.com/a-/AOh14GiTfUMRmBg2yLYEhrBBjXRIJPT5UBP94QmWroXvJQ',
-  locale: 'en',
-  updated_at: '2020-07-19T16:27:14.736Z',
-  email: 'tringuyenduy@gmail.com',
-  email_verified: true,
-  iss: 'https://tridnguyen.auth0.com/',
-  sub: 'google-oauth2|102956012089794272878',
-  aud: 'IxcfVZqCVF9b5FS2NVVnElOeBnoNG02Z',
-  iat: 1595388637,
-  exp: 1595475037,
-  at_hash: 'ssDYjGXWsj-zGXr6tMgJ5A',
-  nonce: 'w0b5xKhP0all8p0471MmV~YfztqpYQyw'
-}
- */
 module.exports = async function (fastify, opts) {
   function handleRequest(fn) {
     return async (request, reply) => {
@@ -76,12 +56,13 @@ module.exports = async function (fastify, opts) {
   const requiredParams = ["type", "name"];
 
   /*
-   * list interface
+   * Create list API payload
    * {
-   *   "type": <string>,
-   *   "name": <string>,
-   *   "admins": <array>,
-   *   "read": "private" | "public"
+   *   type: <string>,
+   *   name: <string>,
+   *   editors: [],
+   *   viewers: [],
+   *   meta: {...}
    * }
    */
 
@@ -89,11 +70,6 @@ module.exports = async function (fastify, opts) {
     "/",
     handleRequest(async (request) => {
       const { user, body } = request;
-      if (!listsAdmins.includes(user.sub)) {
-        throw fastify.httpErrors.unauthorized(
-          "User is not authorized to create list."
-        );
-      }
       for (const requiredParam of requiredParams) {
         if (!request.body[requiredParam]) {
           throw fastify.httpErrors.badRequest(`"${requiredParam}" is required`);
@@ -105,10 +81,12 @@ module.exports = async function (fastify, opts) {
     })
   );
 
-  // update list meta
-  // request.body = {
+  // Update list API payload
+  // {
   //   meta: {...stuff.to.update},
   //   admins: [all-admins],
+  //   editors: [],
+  //   viewers: [],
   // }
   fastify.patch(
     "/:type/:name",
@@ -134,8 +112,8 @@ module.exports = async function (fastify, opts) {
     handleRequest(async (request) => {
       const { user, params } = request;
       const { type, name } = params;
-      const { ref, data } = await getList(user, type, name);
-      if (!data) {
+      const { snapshot, data } = await getList(user, type, name);
+      if (!snapshot.exists) {
         throw fastify.httpErrors.notFound();
       }
       return data;
@@ -147,23 +125,7 @@ module.exports = async function (fastify, opts) {
     handleRequest(async (request) => {
       const { user, params } = request;
       const { type, name } = params;
-      const item = request.body;
-      if (!item.id) {
-        throw fastify.httpErrors.badRequest(`"item.id" is required`);
-      }
-      const { ref: itemRef, data: itemData } = await getItem(
-        user,
-        type,
-        name,
-        item.id
-      );
-      if (itemData) {
-        throw fastify.httpErrors.conflict(`Item "${item.id}" already exists`);
-      }
-      await itemRef.create({
-        ...item,
-      });
-      return { success: true };
+      return await createItem(user, type, name, request.body);
     })
   );
 
@@ -184,8 +146,8 @@ module.exports = async function (fastify, opts) {
       const { user, params } = request;
       const { type, name, id } = params;
 
-      const { ref, data } = await getItem(user, type, name, id);
-      if (!data) {
+      const { snapshot, data } = await getItem(user, type, name, id);
+      if (!snapshot.exists) {
         throw fastify.httpErrors.notFound(`"${id}" is not found.`);
       }
       return data;
@@ -198,17 +160,7 @@ module.exports = async function (fastify, opts) {
       const { user, params } = request;
       const { type, name, id } = params;
 
-      const { ref, data } = await getItem(user, type, name, id);
-      if (!data) {
-        throw fastify.httpErrors.notFound(`"${id}" is not found.`);
-      }
-      await ref.set(
-        {
-          ...request.body,
-        },
-        { merge: true }
-      );
-      return { success: true };
+      return await updateItem(user, type, name, id, request.body);
     })
   );
 
@@ -217,12 +169,8 @@ module.exports = async function (fastify, opts) {
     handleRequest(async (request) => {
       const { user, params } = request;
       const { type, name, id } = params;
-      const { ref, data } = await getItem(user, type, name, id);
-      if (!data) {
-        throw fastify.httpErrors.notFound(`"${id}" is not found.`);
-      }
-      await ref.delete();
-      return { success: true };
+
+      return await deleteItem(user, type, name, id);
     })
   );
 };

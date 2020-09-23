@@ -4,6 +4,13 @@ const chunk = require("lodash.chunk");
 
 const httpErrors = require("fastify-sensible/lib/httpErrors");
 
+const {
+  isUserSuperAdmin,
+  isUserAdmin,
+  isUserEditor,
+  isUserViewer,
+} = require("./authorization");
+
 // get lists that belongs to a user
 async function getLists(user) {
   const ref = listsRef.where("admins", "array-contains", user.sub);
@@ -21,11 +28,7 @@ async function getList(user, type, name) {
   const ref = listsRef.doc(`${type}!${name}`);
   const snapshot = await ref.get();
   const data = snapshot.data();
-  if (
-    snapshot.exists &&
-    data.read != "public" &&
-    !data.admins.includes(user.sub)
-  ) {
+  if (snapshot.exists && !isUserAdmin(user, data)) {
     throw httpErrors.unauthorized("user is not authorized for list");
   }
   return {
@@ -36,9 +39,12 @@ async function getList(user, type, name) {
 }
 
 async function createList(user, type, name, payload) {
-  const { ref, data } = await getList(user, type, name);
-  const { read, meta } = payload || {};
-  if (data) {
+  if (!isUserSuperAdmin(user)) {
+    throw httpErrors.unauthorized("user is not authorized to create list");
+  }
+  const { ref, snapshot } = await getList(user, type, name);
+  const { viewers, editors, meta } = payload || {};
+  if (snapshot.exists) {
     throw httpErrors.conflict(
       `List "${name}" of type "${type}" already exists`
     );
@@ -47,7 +53,8 @@ async function createList(user, type, name, payload) {
     type,
     name,
     admins: [user.sub],
-    read: read || "private",
+    editors: editors || [],
+    viewers: viewers || [],
     meta: meta || {},
   });
   return { success: true };
@@ -58,7 +65,7 @@ async function updateList(user, type, name, payload) {
   if (!data) {
     throw httpErrors.notFound(`"${name}" is not found.`);
   }
-  if (!data.admins.includes(user.sub)) {
+  if (!isUserAdmin(user, data)) {
     throw httpErrors.unauthorized(
       "user is not authorized to perform modification of list"
     );
@@ -79,7 +86,7 @@ async function deleteList(user, type, name) {
   if (!data) {
     throw httpErrors.notFound(`"${name}" is not found.`);
   }
-  if (!data.admins.includes(user.sub)) {
+  if (!isUserAdmin(user, data)) {
     throw httpErrors.unauthorized(
       "user is not authorized to perform deletion of list"
     );
@@ -100,6 +107,9 @@ async function getItems(user, listType, listName) {
   if (!listData) {
     throw httpErrors.notFound();
   }
+  if (!isUserViewer(user, listData)) {
+    throw httpErrors.unauthorized("user is not authorized for list");
+  }
   const ref = listRef.collection("items");
   const snapshot = await ref.get();
 
@@ -111,7 +121,14 @@ async function getItems(user, listType, listName) {
 }
 
 async function getItem(user, listType, listName, itemId) {
-  const { ref: listRef } = await getList(user, listType, listName);
+  const { ref: listRef, data: listData } = await getList(
+    user,
+    listType,
+    listName
+  );
+  if (!isUserViewer(user, listData)) {
+    throw httpErrors.unauthorized("user is not authorized for list");
+  }
   const ref = listRef.collection("items").doc(itemId);
   const snapshot = await ref.get();
   return {
@@ -121,8 +138,62 @@ async function getItem(user, listType, listName, itemId) {
   };
 }
 
+async function createItem(user, listType, listName, item) {
+  const { ref: listRef, data: listData } = await getList(
+    user,
+    listType,
+    listName
+  );
+  if (!isUserEditor(user, listData)) {
+    throw httpErrors.unauthorized("user is not authorized to create item");
+  }
+  if (!item.id) {
+    throw httpErrors.badRequest(`"item.id" is required`);
+  }
+  const { ref, snapshot } = await getItem(user, listType, listName, item.id);
+  if (snapshot.exists) {
+    throw httpErrors.conflict(`Item "${item.id}" already exists`);
+  }
+  await ref.create({
+    ...item,
+  });
+  return { success: true };
+}
+
+async function updateItem(user, listType, listName, itemId, updatedItem) {
+  const { ref: listRef, data: listData } = await getList(
+    user,
+    listType,
+    listName
+  );
+  if (!isUserEditor(user, listData)) {
+    throw httpErrors.unauthorized("user is not authorized to update item");
+  }
+
+  const { ref, snapshot } = await getItem(user, listType, listName, itemId);
+  if (!snapshot.exists) {
+    throw httpErrors.notFound(`"${itemId}" is not found.`);
+  }
+  await ref.set(
+    {
+      ...updatedItem,
+    },
+    { merge: true }
+  );
+  return { success: true };
+}
+
 async function addItemsBulk(user, listType, listName, items) {
-  const { ref: listRef } = await getList(user, listType, listName);
+  const { ref: listRef, data: listData } = await getList(
+    user,
+    listType,
+    listName
+  );
+  if (!isUserEditor(user, listData)) {
+    throw httpErrors.unauthorized(
+      "user is not authorized to add items to list"
+    );
+  }
   // @TODO check if items already exist?
   const chunks = chunk(items, firestore.batchSize);
   await Promise.all(
@@ -139,6 +210,24 @@ async function addItemsBulk(user, listType, listName, items) {
   return { success: true };
 }
 
+async function deleteItem(user, listType, listName, itemId) {
+  const { ref: listRef, data: listData } = await getList(
+    user,
+    listType,
+    listName
+  );
+  if (!isUserEditor(user, listData)) {
+    throw httpErrors.unauthorized("user is not authorized to delete item");
+  }
+
+  const { ref, snapshot } = await getItem(user, listType, listName, itemId);
+  if (!snapshot.exists) {
+    throw httpErrors.notFound(`"${itemId}" is not found.`);
+  }
+  await ref.delete();
+  return { success: true };
+}
+
 module.exports = {
   getLists,
   getList,
@@ -147,5 +236,8 @@ module.exports = {
   deleteList,
   getItems,
   getItem,
+  createItem,
+  updateItem,
   addItemsBulk,
+  deleteItem,
 };
