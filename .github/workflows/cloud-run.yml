@@ -1,24 +1,43 @@
-name: Build and Deploy to Cloud Run
+name: CI & CD
 
-on:
-  push:
-    branches:
-      - master
+on: push
 
-env:
-  PROJECT_ID: build-tridnguyen-com
-  RUN_REGION: us-central1
-  SERVICE_NAME: lists
+# if needs to run on PR, conside using (https://github.community/t/how-to-trigger-an-action-on-push-or-pull-request-but-not-both/16662)
+# on:
+#   push:
+#     branches:
+#     - master
+#   pull_request:
+#     branches:
+#     - master
+
 
 jobs:
-  setup-build-deploy:
-    name: Setup, Build, and Deploy
+  test:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: Test
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.SA_KEY_DEV }}
+        run: npm t
+
+  deploy:
+    name: Deploy
+    needs: test
+    runs-on: ubuntu-latest
+
+    if: github.ref == 'refs/heads/master'
+
+    env:
+      PROJECT_ID: build-tridnguyen-com
+      RUN_REGION: us-central1
+      SERVICE_NAME: lists
+
+    steps:
       # Setup gcloud CLI
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
