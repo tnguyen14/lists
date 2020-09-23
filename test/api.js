@@ -105,6 +105,19 @@ test("lists", (t) => {
           name: "listName",
         });
         t.deepEqual(resp, { success: true });
+        const publicResp = await post("/", {
+          type: "testType",
+          name: "publicList",
+          viewers: ["public"],
+          editors: ["editor"],
+        });
+        t.deepEqual(publicResp, { success: true });
+        const getPublic = await get("/testType/publicList");
+        t.match(getPublic, {
+          admins: ["testuser"],
+          editors: [],
+          viewers: ["public"],
+        });
       } catch (e) {
         t.error(e);
       }
@@ -237,6 +250,40 @@ test("lists", (t) => {
         t.error(e);
       }
     });
+    t.test("not an editor", async (t) => {
+      try {
+        const resp = await post(
+          "/testType/listName",
+          {
+            id: "testItem",
+            prop: "testProp",
+          },
+          {
+            authorization: "unauthorizedUser",
+          }
+        );
+        t.match(resp, { statusCode: 401, error: "Unauthorized" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("editor, not admin", async (t) => {
+      try {
+        const resp = await post(
+          "/testType/publicList",
+          {
+            id: "testItem",
+            prop: "testProp",
+          },
+          {
+            authorization: "editor",
+          }
+        );
+        t.deepEqual(resp, { success: true });
+      } catch (e) {
+        t.error(e);
+      }
+    });
   });
 
   t.test("get items from list", async (t) => {
@@ -261,18 +308,63 @@ test("lists", (t) => {
         t.error(e);
       }
     });
+
+    t.test("not a viewer", async (t) => {
+      try {
+        const resp = await get("/testType/listName/items", {
+          authorization: "unauthorizedUser",
+        });
+        t.match(resp, { statusCode: 401, error: "Unauthorized" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+
+    t.test("not a viewer - public list", async (t) => {
+      try {
+        const resp = await get("/testType/publicList/items", {
+          authorization: "unauthorizedUser",
+        });
+        t.deepEqual(resp, [{ id: "testItem", prop: "testProp" }]);
+      } catch (e) {
+        t.error(e);
+      }
+    });
   });
 
   t.test("retrieve item from list", async (t) => {
-    try {
-      const resp = await get("/testType/listName/items/testItem");
-      t.deepEqual(resp, {
-        id: "testItem",
-        prop: "testProp",
-      });
-    } catch (e) {
-      t.error(e);
-    }
+    t.test("expected good", async (t) => {
+      try {
+        const resp = await get("/testType/listName/items/testItem");
+        t.deepEqual(resp, {
+          id: "testItem",
+          prop: "testProp",
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("not a viewer", async (t) => {
+      try {
+        const resp = await get("/testType/listName/items/testItem", {
+          authorization: "unauthorizedUser",
+        });
+        t.match(resp, { statusCode: 401, error: "Unauthorized" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+
+    t.test("not a viewer - public list", async (t) => {
+      try {
+        const resp = await get("/testType/publicList/items/testItem", {
+          authorization: "unauthorizedUser",
+        });
+        t.deepEqual(resp, { id: "testItem", prop: "testProp" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
   });
 
   t.test("update item", async (t) => {
@@ -289,6 +381,40 @@ test("lists", (t) => {
           prop: "testProp2",
           newProp: "anotherProp",
         });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("not an editor", async (t) => {
+      try {
+        const resp = await patch(
+          "/testType/publicList/items/testItem",
+          {
+            prop: "testProp2",
+            newProp: "anotherProp",
+          },
+          {
+            authorization: "unauthorizedUser",
+          }
+        );
+        t.match(resp, { statusCode: 401, error: "Unauthorized" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("editor, not admin", async (t) => {
+      try {
+        const resp = await patch(
+          "/testType/publicList/items/testItem",
+          {
+            prop: "testProp2",
+            newProp: "anotherProp",
+          },
+          {
+            authorization: "editor",
+          }
+        );
+        t.deepEqual(resp, { success: true });
       } catch (e) {
         t.error(e);
       }
@@ -323,6 +449,26 @@ test("lists", (t) => {
         t.error(e);
       }
     });
+    t.test("not an editor", async (t) => {
+      try {
+        const resp = await del("/testType/publicList/items/testItem", {
+          authorization: "unauthorizedUser",
+        });
+        t.match(resp, { statusCode: 401, error: "Unauthorized" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("editor, not admin", async (t) => {
+      try {
+        const resp = await del("/testType/publicList/items/testItem", {
+          authorization: "editor",
+        });
+        t.deepEqual(resp, { success: true });
+      } catch (e) {
+        t.error(e);
+      }
+    });
   });
 
   t.test("delete a list", async (t) => {
@@ -352,6 +498,8 @@ test("lists", (t) => {
       try {
         const resp = await del("/testType/listName");
         t.deepEqual(resp, { success: true });
+        const publicResp = await del("/testType/publicList");
+        t.deepEqual(publicResp, { success: true });
         const getResp = await get("/");
         t.deepEqual(getResp, []);
       } catch (e) {

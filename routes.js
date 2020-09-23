@@ -15,6 +15,8 @@ const {
   deleteItem,
 } = require("./lists");
 
+const { isUserAdmin } = require("./authorization");
+
 module.exports = async function (fastify, opts) {
   function handleRequest(fn) {
     return async (request, reply) => {
@@ -115,6 +117,11 @@ module.exports = async function (fastify, opts) {
       const { snapshot, data } = await getList(user, type, name);
       if (!snapshot.exists) {
         throw fastify.httpErrors.notFound();
+      }
+      if (!isUserAdmin(user, data)) {
+        throw fastify.httpErrors.unauthorized(
+          "user is not authorized for list"
+        );
       }
       return data;
     })

@@ -28,9 +28,6 @@ async function getList(user, type, name) {
   const ref = listsRef.doc(`${type}!${name}`);
   const snapshot = await ref.get();
   const data = snapshot.data();
-  if (snapshot.exists && !isUserAdmin(user, data)) {
-    throw httpErrors.unauthorized("user is not authorized for list");
-  }
   return {
     ref,
     snapshot,
@@ -108,6 +105,8 @@ async function getItems(user, listType, listName) {
     throw httpErrors.notFound();
   }
   if (!isUserViewer(user, listData)) {
+    console.log(user);
+    console.log(listData);
     throw httpErrors.unauthorized("user is not authorized for list");
   }
   const ref = listRef.collection("items");
