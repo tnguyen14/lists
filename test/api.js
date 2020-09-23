@@ -140,11 +140,72 @@ test("lists", (t) => {
     });
   });
 
+  t.test("modify a list", async (t) => {
+    t.test("update admins and meta", async (t) => {
+      try {
+        const resp = await patch("/testType/listName", {
+          meta: {
+            foo: "bar",
+          },
+          admins: ["testuser", "testuser2"],
+        });
+        t.match(resp, { success: true });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("update viewers/ editors", async (t) => {
+      try {
+        const resp = await patch("/testType/publicList", {
+          viewers: ["public", "testuser2"],
+          editors: ["editor"],
+        });
+        t.match(resp, { success: true });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("not a list admin", async (t) => {
+      try {
+        const resp = await patch(
+          "/testType/listName",
+          {
+            meta: {
+              foo: "baz",
+            },
+          },
+          {
+            authorization: "unauthorizedUser",
+          }
+        );
+        t.match(resp, { statusCode: 401, error: "Unauthorized" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+  });
+
   t.test("get list", async (t) => {
-    t.test("expected good", async (t) => {
+    t.test("expected good - updated admins and meta", async (t) => {
       try {
         const resp = await get("/testType/listName");
-        t.match(resp, { admins: ["testuser"], editors: [], viewers: [] });
+        t.match(resp, {
+          meta: { foo: "bar" },
+          admins: ["testuser", "testuser2"],
+          editors: [],
+          viewers: [],
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("expected good - updated viewers and editors", async (t) => {
+      try {
+        const resp = await get("/testType/publicList");
+        t.match(resp, {
+          editors: ["editor"],
+          viewers: ["public", "testuser2"],
+        });
       } catch (e) {
         t.error(e);
       }
@@ -167,45 +228,6 @@ test("lists", (t) => {
           authorization: "unauthorizedUser",
         });
         console.log(resp);
-        t.match(resp, { statusCode: 401, error: "Unauthorized" });
-      } catch (e) {
-        t.error(e);
-      }
-    });
-  });
-
-  t.test("modify a list", async (t) => {
-    t.test("update list", async (t) => {
-      try {
-        const resp = await patch("/testType/listName", {
-          meta: {
-            foo: "bar",
-          },
-          admins: ["testuser", "testuser2"],
-        });
-        t.match(resp, { success: true });
-        const getResp = await get("/testType/listName");
-        t.match(getResp, {
-          admins: ["testuser", "testuser2"],
-          meta: { foo: "bar" },
-        });
-      } catch (e) {
-        t.error(e);
-      }
-    });
-    t.test("not a list admin", async (t) => {
-      try {
-        const resp = await patch(
-          "/testType/listName",
-          {
-            meta: {
-              foo: "baz",
-            },
-          },
-          {
-            authorization: "unauthorizedUser",
-          }
-        );
         t.match(resp, { statusCode: 401, error: "Unauthorized" });
       } catch (e) {
         t.error(e);

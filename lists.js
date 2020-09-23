@@ -68,7 +68,7 @@ async function updateList(user, type, name, payload) {
     );
   }
   const updatedList = {};
-  const updateProps = ["meta", "admins", "read"];
+  const updateProps = ["meta", "admins", "editors", "viewers"];
   for (const prop of updateProps) {
     if (payload[prop]) {
       updatedList[prop] = payload[prop];
