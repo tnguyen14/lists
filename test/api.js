@@ -111,6 +111,23 @@ test("lists", (t) => {
     }
   });
 
+  t.test("create list without being lists admin", async (t) => {
+    try {
+      const resp = await post("/", {
+        type: "testType",
+        name: "listName2",
+        fakeUser: "unauthorizedUser",
+      });
+      t.match(resp, {
+        statusCode: 401,
+        error: "Unauthorized",
+        message: /User is not authorized to create list/,
+      });
+    } catch (e) {
+      t.error(e);
+    }
+  });
+
   t.test("create a duplicate", async (t) => {
     try {
       const resp = await post("/", {

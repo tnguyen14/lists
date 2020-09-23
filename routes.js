@@ -12,6 +12,7 @@ const {
   getItem,
 } = require("./lists");
 
+const listsAdmins = ["google-oauth2|102956012089794272878", "testuser"];
 /*
  * example user
  *
@@ -88,6 +89,11 @@ module.exports = async function (fastify, opts) {
     "/",
     handleRequest(async (request) => {
       const { user, body } = request;
+      if (!listsAdmins.includes(user.sub)) {
+        throw fastify.httpErrors.unauthorized(
+          "User is not authorized to create list."
+        );
+      }
       for (const requiredParam of requiredParams) {
         if (!request.body[requiredParam]) {
           throw fastify.httpErrors.badRequest(`"${requiredParam}" is required`);
