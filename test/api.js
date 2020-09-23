@@ -109,7 +109,6 @@ test("lists", (t) => {
           type: "testType",
           name: "publicList",
           viewers: ["public"],
-          editors: ["editor"],
         });
         t.deepEqual(publicResp, { success: true });
         const getPublic = await get("/testType/publicList");
