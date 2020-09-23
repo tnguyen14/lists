@@ -16,6 +16,8 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      GOOGLE_APPLICATION_CREDENTIALS: credentials.json
 
     steps:
       - name: Checkout
@@ -24,9 +26,10 @@ jobs:
       - name: Install deps
         run: npm i
 
+      - name: Setup auth
+        run: echo -n ${{ secrets.SA_KEY_DEV }} > $GOOGLE_APPLICATION_CREDENTIALS
+
       - name: Test
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.SA_KEY_DEV }}
         run: npm t
 
   deploy:
