@@ -35,7 +35,7 @@ function isUserEditor(user, listData) {
 
 function isUserViewer(user, listData) {
   const viewers = listData.admins.concat(listData.viewers, listData.editors);
-  if (!viewers.includes(user.sub) && !viewers.includes("public")) {
+  if (!viewers.includes("public") && !viewers.includes(user.sub)) {
     return false;
   }
   return true;
