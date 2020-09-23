@@ -7,43 +7,47 @@ const server = require("@tridnguyen/fastify-server")({
 server.register(require("../routes"));
 
 server.addHook("preHandler", (request, reply, done) => {
-  const user = (request.body && request.body.fakeUser) || "testuser";
+  const user = (request.headers && request.headers.authorization) || "testuser";
   request.user = {
     sub: user,
   };
   done();
 });
 
-async function del(url) {
+async function del(url, headers) {
   const resp = await server.inject({
     method: "DELETE",
     url,
+    headers,
   });
   return resp.json();
 }
 
-async function get(url) {
+async function get(url, headers) {
   const resp = await server.inject({
     method: "GET",
     url,
+    headers,
   });
   return resp.json();
 }
 
-async function post(url, payload) {
+async function post(url, payload, headers) {
   const resp = await server.inject({
     method: "POST",
     url,
     payload,
+    headers,
   });
   return resp.json();
 }
 
-async function patch(url, payload) {
+async function patch(url, payload, headers) {
   const resp = await server.inject({
     method: "PATCH",
     url,
     payload,
+    headers,
   });
   return resp.json();
 }
@@ -71,78 +75,90 @@ test("lists", (t) => {
     }
   });
 
-  t.test("get list that doesn't exist", async (t) => {
-    try {
-      const resp = await get("/testType/unknownList");
-      t.deepEqual(resp, {
-        statusCode: 404,
-        error: "Not Found",
-        message: "Not Found",
-      });
-    } catch (e) {
-      t.error(e);
-    }
-  });
-
-  t.test("get items from list that doesn't exist", async (t) => {
-    try {
-      const resp = await get("/test/unknown/items");
-      t.deepEqual(resp, {
-        statusCode: 404,
-        error: "Not Found",
-        message: "Not Found",
-      });
-    } catch (e) {
-      t.error(e);
-    }
-  });
-
   t.test("create a list", async (t) => {
-    try {
-      const resp = await post("/", {
-        type: "testType",
-        name: "listName",
-      });
-      t.deepEqual(resp, { success: true });
-      const getResp = await get("/testType/listName");
-      console.log(getResp);
-      t.match(getResp, { admins: ["testuser"] });
-    } catch (e) {
-      t.error(e);
-    }
+    t.test("create list without being lists admin", async (t) => {
+      try {
+        const resp = await post(
+          "/",
+          {
+            type: "testType",
+            name: "listName2",
+          },
+          {
+            authorization: "unauthorizedUser",
+          }
+        );
+        t.match(resp, {
+          statusCode: 401,
+          error: "Unauthorized",
+          message: /user is not authorized to create list/,
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+
+    t.test("expected good", async (t) => {
+      try {
+        const resp = await post("/", {
+          type: "testType",
+          name: "listName",
+        });
+        t.deepEqual(resp, { success: true });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+
+    t.test("duplicate", async (t) => {
+      try {
+        const resp = await post("/", {
+          type: "testType",
+          name: "listName",
+        });
+        t.match(resp, {
+          statusCode: 409,
+          error: "Conflict",
+          message: /List "listName" of type "testType" already exists/,
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
   });
 
-  t.test("create list without being lists admin", async (t) => {
-    try {
-      const resp = await post("/", {
-        type: "testType",
-        name: "listName2",
-        fakeUser: "unauthorizedUser",
-      });
-      t.match(resp, {
-        statusCode: 401,
-        error: "Unauthorized",
-        message: /user is not authorized to create list/,
-      });
-    } catch (e) {
-      t.error(e);
-    }
-  });
-
-  t.test("create a duplicate", async (t) => {
-    try {
-      const resp = await post("/", {
-        type: "testType",
-        name: "listName",
-      });
-      t.match(resp, {
-        statusCode: 409,
-        error: "Conflict",
-        message: /List "listName" of type "testType" already exists/,
-      });
-    } catch (e) {
-      t.error(e);
-    }
+  t.test("get list", async (t) => {
+    t.test("expected good", async (t) => {
+      try {
+        const resp = await get("/testType/listName");
+        t.match(resp, { admins: ["testuser"], editors: [], viewers: [] });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("doesn't exist", async (t) => {
+      try {
+        const resp = await get("/testType/unknownList");
+        t.deepEqual(resp, {
+          statusCode: 404,
+          error: "Not Found",
+          message: "Not Found",
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("not an admin", async (t) => {
+      try {
+        const resp = await get("/testType/listName", {
+          authorization: "unauthorizedUser",
+        });
+        console.log(resp);
+        t.match(resp, { statusCode: 401, error: "Unauthorized" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
   });
 
   t.test("modify a list", async (t) => {
@@ -164,17 +180,24 @@ test("lists", (t) => {
         t.error(e);
       }
     });
-  });
-
-  t.test("check getting a list by a different user", async (t) => {
-    try {
-      // the list testType!preExisting is already created
-      // and owned by a different user
-      const resp = await get("/testType/preExisting");
-      t.match(resp, { statusCode: 401, error: "Unauthorized" });
-    } catch (e) {
-      t.error(e);
-    }
+    t.test("not a list admin", async (t) => {
+      try {
+        const resp = await patch(
+          "/testType/listName",
+          {
+            meta: {
+              foo: "baz",
+            },
+          },
+          {
+            authorization: "unauthorizedUser",
+          }
+        );
+        t.match(resp, { statusCode: 401, error: "Unauthorized" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
   });
 
   t.test("add item to list", async (t) => {
@@ -185,8 +208,6 @@ test("lists", (t) => {
           prop: "testProp",
         });
         t.deepEqual(resp, { success: true });
-        const getResp = await get("/testType/listName/items");
-        t.deepEqual(getResp, [{ id: "testItem", prop: "testProp" }]);
       } catch (e) {
         t.error(e);
       }
@@ -211,6 +232,30 @@ test("lists", (t) => {
           statusCode: 409,
           error: "Conflict",
           message: 'Item "testItem" already exists',
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+  });
+
+  t.test("get items from list", async (t) => {
+    t.test("expected good", async (t) => {
+      try {
+        const resp = await get("/testType/listName/items");
+        t.deepEqual(resp, [{ id: "testItem", prop: "testProp" }]);
+      } catch (e) {
+        t.error(e);
+      }
+    });
+
+    t.test("list doesn't exist", async (t) => {
+      try {
+        const resp = await get("/test/unknown/items");
+        t.deepEqual(resp, {
+          statusCode: 404,
+          error: "Not Found",
+          message: "Not Found",
         });
       } catch (e) {
         t.error(e);
@@ -289,6 +334,16 @@ test("lists", (t) => {
           error: "Not Found",
           message: '"listNam" is not found.',
         });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("not a list admin", async (t) => {
+      try {
+        const resp = await del("/testType/listName", {
+          authorization: "unauthorizedUser",
+        });
+        t.match(resp, { statusCode: 401, error: "Unauthorized" });
       } catch (e) {
         t.error(e);
       }
