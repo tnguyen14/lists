@@ -1,5 +1,6 @@
 require("dotenv").config();
 const test = require("tap").test;
+const qs = require("qs");
 const server = require("@tridnguyen/fastify-server")({
   shouldPerformJwtCheck: false,
 });
@@ -227,7 +228,6 @@ test("lists", (t) => {
         const resp = await get("/testType/listName", undefined, {
           authorization: "unauthorizedUser",
         });
-        console.log(resp);
         t.match(resp, { statusCode: 401, error: "Unauthorized" });
       } catch (e) {
         t.error(e);
@@ -253,14 +253,17 @@ test("lists", (t) => {
           {
             id: "bulkItem1",
             prop: "bulkProp1",
+            search: "found",
           },
           {
             id: "bulkItem2",
             prop: "aProp",
+            search: "found",
           },
           {
             id: "bulkItem3",
-            prop: "bulkProp3",
+            prop: "zProp",
+            search: "found",
           },
         ]);
         t.deepEqual(resp, { success: true });
@@ -355,14 +358,32 @@ test("lists", (t) => {
       try {
         const resp = await get("/testType/listName/items", {
           orderBy: "prop",
-          order: "asc",
+          order: "desc",
         });
-        t.match(resp, [{ id: "bulkItem2", prop: "aProp" }]);
+        t.match(resp, [{ id: "bulkItem3", prop: "zProp" }]);
       } catch (e) {
         t.error(e);
       }
     });
 
+    t.test("get with where query", async (t) => {
+      try {
+        const resp = await get(
+          `/testType/listName/items?${qs.stringify({
+            where: [
+              {
+                field: "search",
+                op: "==",
+                value: "found",
+              },
+            ],
+          })}`
+        );
+        t.equal(resp.length, 3);
+      } catch (e) {
+        t.error(e);
+      }
+    });
     t.test("list doesn't exist", async (t) => {
       try {
         const resp = await get("/test/unknown/items");
