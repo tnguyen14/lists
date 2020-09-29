@@ -1,5 +1,18 @@
 # lists
 
+## APIs
+
+See `test/lists.js` for endpoint documentation.
+
+### Create a new list
+
+```sh
+:; curl -X POST https://lists.cloud.tridnguyen.com/ \
+  -H "Auhorization: Bearer $AUTH_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"type": "<listType>", "name": "<listName>", "viewers": ["public"]}'
+```
+
 ## Migrate from prod to dev
 
 ```shell
