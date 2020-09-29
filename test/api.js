@@ -256,7 +256,7 @@ test("lists", (t) => {
           },
           {
             id: "bulkItem2",
-            prop: "bulkProp2",
+            prop: "aProp",
           },
           {
             id: "bulkItem3",
@@ -350,6 +350,19 @@ test("lists", (t) => {
         t.error(e);
       }
     });
+
+    t.test("get with orderBy", async (t) => {
+      try {
+        const resp = await get("/testType/listName/items", {
+          orderBy: "prop",
+          order: "asc",
+        });
+        t.match(resp, [{ id: "bulkItem2", prop: "aProp" }]);
+      } catch (e) {
+        t.error(e);
+      }
+    });
+
     t.test("list doesn't exist", async (t) => {
       try {
         const resp = await get("/test/unknown/items");

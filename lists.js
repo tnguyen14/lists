@@ -108,12 +108,16 @@ async function getItems(user, listType, listName, query) {
     throw httpErrors.unauthorized("user is not authorized for list");
   }
 
-  const { limit } = query;
+  const { limit, orderBy, order } = query;
   const itemsRef = listRef.collection("items");
   let ref = itemsRef;
   // @TODO enforce a default limit once checkbook is migrated to query filter
+  // such as Math.min(Number(limit) || defaultLimit, maxLimit)
   if (Number(limit)) {
     ref = ref.limit(Number(limit));
+  }
+  if (orderBy) {
+    ref = ref.orderBy(orderBy, order || "desc");
   }
   const snapshot = await ref.get();
 
