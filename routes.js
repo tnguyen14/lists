@@ -12,6 +12,7 @@ const {
   getItem,
   createItem,
   updateItem,
+  addItemsBulk,
   deleteItem,
 } = require("./lists");
 
@@ -136,13 +137,22 @@ module.exports = async function (fastify, opts) {
     })
   );
 
-  fastify.get(
-    "/:type/:name/items",
+  fastify.post(
+    "/:type/:name/bulk",
     handleRequest(async (request) => {
       const { user, params } = request;
       const { type, name } = params;
+      return await addItemsBulk(user, type, name, request.body);
+    })
+  );
 
-      const { data } = await getItems(user, type, name);
+  fastify.get(
+    "/:type/:name/items",
+    handleRequest(async (request) => {
+      const { user, params, query } = request;
+      const { type, name } = params;
+
+      const { data } = await getItems(user, type, name, query);
       return data;
     })
   );

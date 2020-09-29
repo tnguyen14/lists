@@ -95,7 +95,7 @@ async function deleteList(user, type, name) {
   };
 }
 
-async function getItems(user, listType, listName) {
+async function getItems(user, listType, listName, query) {
   const { ref: listRef, data: listData } = await getList(
     user,
     listType,
@@ -105,11 +105,16 @@ async function getItems(user, listType, listName) {
     throw httpErrors.notFound();
   }
   if (!isUserViewer(user, listData)) {
-    console.log(user);
-    console.log(listData);
     throw httpErrors.unauthorized("user is not authorized for list");
   }
-  const ref = listRef.collection("items");
+
+  const { limit } = query;
+  const itemsRef = listRef.collection("items");
+  let ref = itemsRef;
+  // @TODO enforce a default limit once checkbook is migrated to query filter
+  if (Number(limit)) {
+    ref = ref.limit(Number(limit));
+  }
   const snapshot = await ref.get();
 
   return {

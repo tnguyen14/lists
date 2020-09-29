@@ -23,10 +23,11 @@ async function del(url, headers) {
   return resp.json();
 }
 
-async function get(url, headers) {
+async function get(url, query, headers) {
   const resp = await server.inject({
     method: "GET",
     url,
+    query,
     headers,
   });
   return resp.json();
@@ -223,7 +224,7 @@ test("lists", (t) => {
     });
     t.test("not an admin", async (t) => {
       try {
-        const resp = await get("/testType/listName", {
+        const resp = await get("/testType/listName", undefined, {
           authorization: "unauthorizedUser",
         });
         console.log(resp);
@@ -241,6 +242,27 @@ test("lists", (t) => {
           id: "testItem",
           prop: "testProp",
         });
+        t.deepEqual(resp, { success: true });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("add in bulk", async (t) => {
+      try {
+        const resp = await post("/testType/listName/bulk", [
+          {
+            id: "bulkItem1",
+            prop: "bulkProp1",
+          },
+          {
+            id: "bulkItem2",
+            prop: "bulkProp2",
+          },
+          {
+            id: "bulkItem3",
+            prop: "bulkProp3",
+          },
+        ]);
         t.deepEqual(resp, { success: true });
       } catch (e) {
         t.error(e);
@@ -311,12 +333,23 @@ test("lists", (t) => {
     t.test("expected good", async (t) => {
       try {
         const resp = await get("/testType/listName/items");
-        t.deepEqual(resp, [{ id: "testItem", prop: "testProp" }]);
+        t.equal(resp.length, 4);
+        t.ok(resp.some((item) => item.id == "testItem"));
       } catch (e) {
         t.error(e);
       }
     });
 
+    t.test("get with limit", async (t) => {
+      try {
+        const resp = await get("/testType/listName/items", {
+          limit: 2,
+        });
+        t.equal(resp.length, 2);
+      } catch (e) {
+        t.error(e);
+      }
+    });
     t.test("list doesn't exist", async (t) => {
       try {
         const resp = await get("/test/unknown/items");
@@ -332,7 +365,7 @@ test("lists", (t) => {
 
     t.test("not a viewer", async (t) => {
       try {
-        const resp = await get("/testType/listName/items", {
+        const resp = await get("/testType/listName/items", undefined, {
           authorization: "unauthorizedUser",
         });
         t.match(resp, { statusCode: 401, error: "Unauthorized" });
@@ -343,7 +376,7 @@ test("lists", (t) => {
 
     t.test("not a viewer - public list", async (t) => {
       try {
-        const resp = await get("/testType/publicList/items", {
+        const resp = await get("/testType/publicList/items", undefined, {
           authorization: "unauthorizedUser",
         });
         t.deepEqual(resp, [{ id: "testItem", prop: "testProp" }]);
@@ -367,7 +400,7 @@ test("lists", (t) => {
     });
     t.test("not a viewer", async (t) => {
       try {
-        const resp = await get("/testType/listName/items/testItem", {
+        const resp = await get("/testType/listName/items/testItem", undefined, {
           authorization: "unauthorizedUser",
         });
         t.match(resp, { statusCode: 401, error: "Unauthorized" });
@@ -378,9 +411,13 @@ test("lists", (t) => {
 
     t.test("not a viewer - public list", async (t) => {
       try {
-        const resp = await get("/testType/publicList/items/testItem", {
-          authorization: "unauthorizedUser",
-        });
+        const resp = await get(
+          "/testType/publicList/items/testItem",
+          undefined,
+          {
+            authorization: "unauthorizedUser",
+          }
+        );
         t.deepEqual(resp, { id: "testItem", prop: "testProp" });
       } catch (e) {
         t.error(e);
