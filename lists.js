@@ -122,6 +122,8 @@ async function getItems(user, listType, listName, query) {
   if (Number(limit)) {
     ref = ref.limit(Number(limit));
   }
+  // @TODO if orderBy is different from where filter field,
+  // firestore will throw an error about composite index
   if (orderBy) {
     ref = ref.orderBy(orderBy, order);
   }
