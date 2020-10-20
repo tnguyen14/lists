@@ -10,7 +10,7 @@ const {
   addItemsBulk,
 } = require("../lists");
 
-const apiServer = "https://lists.cloud.tridnguyen.com";
+const apiServer = process.env.API_SERVER;
 
 const listsToMigrate = [
   {
@@ -31,7 +31,8 @@ const listsToMigrate = [
   },
 ];
 
-async function migrateList({ type: listType, name: listName }) {
+async function migrateList(token, { type: listType, name: listName }) {
+  const user = jwt.decode(token);
   try {
     const [list, items] = await Promise.all(
       [
@@ -40,7 +41,7 @@ async function migrateList({ type: listType, name: listName }) {
       ].map((url) =>
         getJson(url, {
           headers: {
-            Authorization: `Bearer ${apiToken}`,
+            Authorization: `Bearer ${token}`,
           },
         })
       )
@@ -70,17 +71,22 @@ async function migrateList({ type: listType, name: listName }) {
 }
 
 async function migrate() {
-  const tokenResponse = await postJson(
-    `https://${process.env.AUTH0_DOMAIN}/oauth/token`,
-    {
-      client_id: process.env.SERVER_APP_AUTH0_CLIENT_ID,
-      client_secret: process.env.SERVER_APP_AUTH0_CLIENT_SECRET,
-      audience: `https://${process.env.AUTH0_DOMAIN}/api/v2/`,
-      grant_type: "client_credentials",
-    }
-  );
-  const user = tokenResponse.access_token;
-  listsToMigrate.map(migrateList);
+  try {
+    const tokenResponse = await postJson(
+      `https://${process.env.AUTH0_DOMAIN}/oauth/token`,
+      {
+        client_id: process.env.SERVER_APP_AUTH0_CLIENT_ID,
+        client_secret: process.env.SERVER_APP_AUTH0_CLIENT_SECRET,
+        // audience: `https://${process.env.AUTH0_DOMAIN}/api/v2/`,
+        audience: apiServer,
+        grant_type: "client_credentials",
+      }
+    );
+    const token = tokenResponse.access_token;
+    listsToMigrate.map(migrateList.bind(null, token));
+  } catch (e) {
+    console.error(e);
+  }
 }
 
 if (require.main === module) {
