@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "PORT=13050 nodemon",
+    "start": "PORT=13050 nodemon server.js",
     "test": "tap --reporter specy"
   },
   "repository": {
