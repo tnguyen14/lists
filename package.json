@@ -21,7 +21,8 @@
     "@tridnguyen/fastify-server": "^1.4.0",
     "@tridnguyen/firestore": "^2.1.0",
     "dotenv": "^8.2.0",
-    "lodash.chunk": "^4.2.0"
+    "lodash.chunk": "^4.2.0",
+    "simple-fetch": "^2.1.0"
   },
   "devDependencies": {
     "husky": "^4.2.5",
@@ -29,7 +30,6 @@
     "lint-staged": "^10.2.11",
     "nodemon": "^2.0.6",
     "prettier": "^2.0.5",
-    "simple-fetch": "^2.1.0",
     "tap": "^14.10.8"
   },
   "husky": {
