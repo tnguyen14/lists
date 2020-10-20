@@ -7,6 +7,7 @@ exports.migrate = async (req, res) => {
       status: "success",
     });
   } catch (e) {
+    console.error(e);
     res.status(500).send(e.message);
     return;
   }
