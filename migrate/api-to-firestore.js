@@ -71,11 +71,11 @@ async function migrateList({ type: listType, name: listName }) {
 
 async function migrate() {
   const tokenResponse = await postJson(
-    "https://tridnguyen.auth0.com/oauth/token",
+    `https://${process.env.AUTH0_DOMAIN}/oauth/token`,
     {
       client_id: process.env.SERVER_APP_AUTH0_CLIENT_ID,
       client_secret: process.env.SERVER_APP_AUTH0_CLIENT_SECRET,
-      audience: "https://tridnguyen.auth0.com/api/v2/",
+      audience: `https://${process.env.AUTH0_DOMAIN}/api/v2/`,
       grant_type: "client_credentials",
     }
   );
