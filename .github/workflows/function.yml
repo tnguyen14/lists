@@ -31,7 +31,7 @@ jobs:
         env:
           FUNCTION_NAME: lists-migrate-api-to-firestore
           ENTRY_POINT: migrate
-          SCHEDULER_JOB_NAME: lists-migrate-api-to-firestore
+          SCHEDULER_JOB_NAME: lists-migrate-api-to-firestore-trigger
           SCHEDULE: 30 19 * * *
         run: |-
           gcloud functions deploy $FUNCTION_NAME \
