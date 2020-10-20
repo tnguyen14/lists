@@ -21,13 +21,13 @@ jobs:
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         with:
           service_account_email: "github-actions@build-tridnguyen-com.iam.gserviceaccount.com"
-          service_account_key: ${{ secrets.SA_KEY }}
-          project_id: "build-tridnguyen-com"
+          service_account_key: ${{ secrets.SA_KEY_DEV }}
+          project_id: ${{ env. PROJECT_ID }}
 
       # Ideally, should set ingress-settings to "internal-only", but
       # that doesn't seem to be working
       # https://stackoverflow.com/questions/60321764/
-      - name: bankcheck
+      - name: migrate
         env:
           FUNCTION_NAME: lists-migrate-api-to-firestore
           ENTRY_POINT: migrate
