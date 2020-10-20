@@ -83,7 +83,7 @@ async function migrate() {
       }
     );
     const token = tokenResponse.access_token;
-    listsToMigrate.map(migrateList.bind(null, token));
+    await Promise.all(listsToMigrate.map(migrateList.bind(null, token)));
   } catch (e) {
     console.error(e);
   }
