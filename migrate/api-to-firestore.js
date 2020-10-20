@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const { getJson } = require("simple-fetch");
+const { getJson, postJson } = require("simple-fetch");
 const jwt = require("jsonwebtoken");
 
 const {
@@ -10,8 +10,7 @@ const {
   addItemsBulk,
 } = require("../lists");
 
-const apiToken = process.env.API_TOKEN;
-const apiServer = process.env.MIGRATE_FROM_API_SERVER;
+const apiServer = "https://lists.cloud.tridnguyen.com";
 
 const listsToMigrate = [
   {
@@ -31,8 +30,6 @@ const listsToMigrate = [
     name: "tri",
   },
 ];
-
-const user = jwt.decode(apiToken);
 
 async function migrateList({ type: listType, name: listName }) {
   try {
@@ -72,4 +69,25 @@ async function migrateList({ type: listType, name: listName }) {
   }
 }
 
-listsToMigrate.map(migrateList);
+async function migrate() {
+  const tokenResponse = await postJson(
+    "https://tridnguyen.auth0.com/oauth/token",
+    {
+      client_id: process.env.SERVER_APP_AUTH0_CLIENT_ID,
+      client_secret: process.env.SERVER_APP_AUTH0_CLIENT_SECRET,
+      audience: "https://tridnguyen.auth0.com/api/v2/",
+      grant_type: "client_credentials",
+    }
+  );
+  const user = tokenResponse.access_token;
+  listsToMigrate.map(migrateList);
+}
+
+if (require.main === module) {
+  try {
+    migrate();
+  } catch (e) {
+    console.error(e);
+    process.exit(1);
+  }
+}
