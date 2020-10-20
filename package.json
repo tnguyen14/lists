@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "PORT=13050 nodemon",
     "test": "tap --reporter specy"
   },
   "repository": {
@@ -26,6 +27,7 @@
     "husky": "^4.2.5",
     "jsonwebtoken": "^8.5.1",
     "lint-staged": "^10.2.11",
+    "nodemon": "^2.0.6",
     "prettier": "^2.0.5",
     "simple-fetch": "^2.1.0",
     "tap": "^14.10.8"
