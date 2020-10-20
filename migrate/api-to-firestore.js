@@ -97,3 +97,7 @@ if (require.main === module) {
     process.exit(1);
   }
 }
+
+module.exports = {
+  migrate,
+};
