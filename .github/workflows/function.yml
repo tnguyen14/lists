@@ -1,0 +1,46 @@
+name: Cloud Functions
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_ID: dev-build-tridnguyen-com
+      REGION: us-central1
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      # Setup gcloud CLI
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_email: "github-actions@build-tridnguyen-com.iam.gserviceaccount.com"
+          service_account_key: ${{ secrets.SA_KEY }}
+          project_id: "build-tridnguyen-com"
+
+      # Ideally, should set ingress-settings to "internal-only", but
+      # that doesn't seem to be working
+      # https://stackoverflow.com/questions/60321764/
+      - name: bankcheck
+        env:
+          FUNCTION_NAME: lists-migrate-api-to-firestore
+          ENTRY_POINT: migrate
+          SCHEDULER_JOB_NAME: lists-migrate-api-to-firestore
+          SCHEDULE: 30 19 * * *
+        run: |-
+          gcloud functions deploy $FUNCTION_NAME \
+            --entry-point=$ENTRY_POINT \
+            --allow-unauthenticated \
+            --region "$REGION" \
+            --runtime nodejs12 \
+            --ingress-settings=all \
+            --trigger-http
+          gcloud scheduler jobs update http $SCHEDULER_JOB_NAME \
+            --schedule="$SCHEDULE" \
+            --uri="$(gcloud functions describe $FUNCTION_NAME --format='value(httpsTrigger.url)')"
