@@ -2,7 +2,7 @@ const { migrate } = require("./migrate/api-to-firestore");
 
 exports.migrate = async (req, res) => {
   try {
-    migrate();
+    await migrate();
     res.status(200).json({
       status: "success",
     });
