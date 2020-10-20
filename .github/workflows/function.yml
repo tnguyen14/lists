@@ -41,6 +41,6 @@ jobs:
             --runtime nodejs12 \
             --ingress-settings=all \
             --trigger-http
-          gcloud scheduler jobs update http $SCHEDULER_JOB_NAME \
-            --schedule="$SCHEDULE" \
-            --uri="$(gcloud functions describe $FUNCTION_NAME --format='value(httpsTrigger.url)')"
+          # gcloud scheduler jobs update http $SCHEDULER_JOB_NAME \
+          #   --schedule="$SCHEDULE" \
+          #   --uri="$(gcloud functions describe $FUNCTION_NAME --format='value(httpsTrigger.url)')"
