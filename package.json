@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/tnguyen14/lists#readme",
   "dependencies": {
-    "@tridnguyen/fastify-server": "^1.5.0",
+    "@tridnguyen/fastify-server": "^2.1.0",
     "@tridnguyen/firestore": "^2.1.0",
     "dotenv": "^8.2.0",
     "lodash.chunk": "^4.2.0",
