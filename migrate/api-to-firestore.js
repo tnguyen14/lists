@@ -34,6 +34,14 @@ const listsToMigrate = [
     type: "ledge",
     name: "tri",
   },
+  {
+    type: "robinhood",
+    name: "positions",
+  },
+  {
+    type: "robinhood",
+    name: "orders",
+  },
 ];
 
 async function migrateItemsInChunks(token, listType, listName, before) {
