@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const { getJson, postJson } = require("simple-fetch");
 const jwt = require("jsonwebtoken");
+const qs = require("qs");
 
 const {
   deleteList,
@@ -31,22 +32,61 @@ const listsToMigrate = [
   },
 ];
 
+async function migrateItemsInChunks(token, listType, listName, before) {
+  const chunkSize = 500;
+  const user = jwt.decode(token);
+  const listId = `${listType}!${listName}`;
+  let query = {
+    limit: chunkSize,
+    orderBy: "id",
+    order: "desc",
+  };
+  if (before) {
+    query.where = [
+      {
+        field: "id",
+        op: "<",
+        value: before,
+      },
+    ];
+  }
+  const items = await getJson(
+    `${apiServer}/${listType}/${listName}/items?${qs.stringify(query)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  if (!items.length) {
+    console.log(`No more items for ${listId}`);
+    return;
+  }
+  console.log(
+    `Adding ${items.length} items to list ${listId}, starting with ${
+      items[0].id
+    }, ending with ${items[items.length - 1].id}`
+  );
+  await addItemsBulk(user, listType, listName, items);
+
+  // recursively call migrate, starting with the item before the last item
+  await migrateItemsInChunks(
+    token,
+    listType,
+    listName,
+    items[items.length - 1].id
+  );
+}
+
 async function migrateList(token, { type: listType, name: listName }) {
   const user = jwt.decode(token);
+  const listId = `${listType}!${listName}`;
   try {
-    const [list, items] = await Promise.all(
-      [
-        `${apiServer}/${listType}/${listName}`,
-        `${apiServer}/${listType}/${listName}/items`,
-      ].map((url) =>
-        getJson(url, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-      )
-    );
-    const listId = `${listType}!${listName}`;
+    const list = await getJson(`${apiServer}/${listType}/${listName}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     console.log(`Migrating list ${listId}`);
     // list might not exist - wrap in try/catch
     try {
@@ -59,8 +99,7 @@ async function migrateList(token, { type: listType, name: listName }) {
     await createList(user, listType, listName);
     console.log(`Updating new list ${listId} with metadata`);
     await updateList(user, listType, listName, list);
-    console.log(`Adding ${items.length} items to list ${listId}`);
-    await addItemsBulk(user, listType, listName, items);
+    await migrateItemsInChunks(token, listType, listName);
   } catch (e) {
     if (e.response) {
       console.error(e.response);
