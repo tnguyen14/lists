@@ -3,6 +3,7 @@ const AUTH_TOKEN = process.env.AUTH_TOKEN;
 const ROBINHOOD_AUTH_TOKEN = process.env.ROBINHOOD_AUTH_TOKEN;
 const API_SERVER = process.env.API_SERVER;
 const ROBINHOOD_API_SERVER = "https://api.robinhood.com";
+const ROBINHOOD_ACCOUNT_NUMBER = process.env.ROBINHOOD_ACCOUNT_NUMBER;
 const { getJson, postJson, patchJson, deleteJson } = require("simple-fetch");
 const jwt = require("jsonwebtoken");
 const compact = require("lodash/compact");
@@ -54,49 +55,89 @@ async function migrateEntity(entity, url) {
   }
 }
 
-async function migrate() {
+async function migrateList(listName) {
   const user = jwt.decode(AUTH_TOKEN);
+  try {
+    await deleteJson(`${API_SERVER}/robinhood/${listName}`, {
+      headers: {
+        Authorization: `Bearer ${AUTH_TOKEN}`,
+      },
+    });
+  } catch (e) {
+    if (e.response.statusText != "Not Found") {
+      throw e;
+    }
+  }
+
+  await postJson(
+    `${API_SERVER}`,
+    {
+      type: "robinhood",
+      name: listName,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${AUTH_TOKEN}`,
+      },
+    }
+  );
+
+  await patchJson(
+    `${API_SERVER}/robinhood/${listName}`,
+    {
+      admins: [user.sub, "DQdO31wITIPGO5g9T3jd3kPDuqvMXPFy@clients"],
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${AUTH_TOKEN}`,
+      },
+    }
+  );
+}
+
+async function migrateAccount() {
+  await migrateList("account");
+  const account = await getJson(
+    `${ROBINHOOD_API_SERVER}/accounts/${ROBINHOOD_ACCOUNT_NUMBER}/`,
+    {
+      headers: {
+        Authorization: `Bearer ${ROBINHOOD_AUTH_TOKEN}`,
+      },
+    }
+  );
+  const portfolio = await getJson(
+    `${ROBINHOOD_API_SERVER}/accounts/${ROBINHOOD_ACCOUNT_NUMBER}/portfolio/`,
+    {
+      headers: {
+        Authorization: `Bearer ${ROBINHOOD_AUTH_TOKEN}`,
+      },
+    }
+  );
+  await patchJson(
+    `${API_SERVER}/robinhood/account`,
+    {
+      meta: {
+        account,
+        portfolio,
+        lastUpdated: new Date(),
+      },
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${AUTH_TOKEN}`,
+      },
+    }
+  );
+}
+
+async function migrate() {
   await Promise.all(
-    ["positions", "orders"].map(async (entity) => {
-      try {
-        await deleteJson(`${API_SERVER}/robinhood/${entity}`, {
-          headers: {
-            Authorization: `Bearer ${AUTH_TOKEN}`,
-          },
-        });
-      } catch (e) {
-        if (e.response.statusText != "Not Found") {
-          throw e;
-        }
-      }
-
-      await postJson(
-        `${API_SERVER}`,
-        {
-          type: "robinhood",
-          name: entity,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${AUTH_TOKEN}`,
-          },
-        }
-      );
-
-      await patchJson(
-        `${API_SERVER}/robinhood/${entity}`,
-        {
-          admins: [user.sub, "DQdO31wITIPGO5g9T3jd3kPDuqvMXPFy@clients"],
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${AUTH_TOKEN}`,
-          },
-        }
-      );
-
-      await migrateEntity(entity);
-    })
+    ["positions", "orders"]
+      .map(async (entity) => {
+        await migrateList(entity);
+        await migrateEntity(entity);
+      })
+      .concat(await migrateAccount())
   );
 }
 
