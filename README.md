@@ -10,13 +10,12 @@ See `test/lists.js` for endpoint documentation.
 :; curl -X POST https://lists.cloud.tridnguyen.com/ \
   -H "Auhorization: Bearer $AUTH_TOKEN" \
   -H 'Content-Type: application/json' \
-  -d '{"type": "<listType>", "name": "<listName>", "viewers": ["public"]}'
+  -d '{"type": "<listType>", "name": "<listName>"}'
 ```
 
 ## Migrate from prod to dev
 
 ```shell
-:; export API_TOKEN=<jwt-token>
-:; export MIGRATE_FROM_API_SERVER=https://lists.cloud.tridnguyen.com
+:; export API_SERVER=https://lists.cloud.tridnguyen.com
 :; node migrate/api-to-firestore.js
 ```

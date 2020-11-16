@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { getJson, postJson, patchJson, deleteJson } = require("simple-fetch");
+const { getJson, postJson, patchJson } = require("simple-fetch");
 const compact = require("lodash.compact");
 
 const AUTH_TOKEN = process.env.AUTH_TOKEN;
@@ -154,7 +154,4 @@ async function migrate() {
   await Promise.all([migrateAccount(), migratePositions(), migrateOrders()]);
 }
 
-// before this, create 2 lists first
-// create-list robinhood positions
-// create-list robinhood orders
 migrate().then(console.log, console.error);
