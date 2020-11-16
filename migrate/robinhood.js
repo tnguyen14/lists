@@ -1,12 +1,31 @@
 require("dotenv").config();
+const { getJson, postJson, patchJson, deleteJson } = require("simple-fetch");
+const compact = require("lodash/compact");
+
 const AUTH_TOKEN = process.env.AUTH_TOKEN;
 const ROBINHOOD_AUTH_TOKEN = process.env.ROBINHOOD_AUTH_TOKEN;
 const API_SERVER = process.env.API_SERVER;
 const ROBINHOOD_API_SERVER = "https://api.robinhood.com";
 const ROBINHOOD_ACCOUNT_NUMBER = process.env.ROBINHOOD_ACCOUNT_NUMBER;
-const { getJson, postJson, patchJson, deleteJson } = require("simple-fetch");
-const jwt = require("jsonwebtoken");
-const compact = require("lodash/compact");
+
+const migrateList = require("./create-list");
+
+// Some items don't have "id" property,
+// derive the ID from the last part of url
+// For example, position url is
+// https://api.robinhood.com/positions/5PY27745/306245dd-b82d-4d8d-bcc5-7c58e87cdd15/
+function getIdFromUrl(url) {
+  const urlParts = compact(url.split("/"));
+  return urlParts.pop();
+}
+
+function parseItem(item) {
+  if (item.id) {
+    return item;
+  }
+  item.id = getIdFromUrl(item.url);
+  return item;
+}
 
 async function migrateEntity(entity, url) {
   const requestUrl = url || `${ROBINHOOD_API_SERVER}/${entity}/`;
@@ -21,20 +40,7 @@ async function migrateEntity(entity, url) {
     return;
   }
   console.log(`Migrating ${resp.results.length} items for ${entity}...`);
-  // Currently, we know that positions don't have "id" property,
-  // generalizing this logic for any entity without id,
-  // assuming they have "url" property, and the last part of it
-  // is the ID.
-  // For example, position "url" is
-  // https://api.robinhood.com/positions/5PY27745/306245dd-b82d-4d8d-bcc5-7c58e87cdd15/
-  const items = resp.results.map((item) => {
-    if (item.id) {
-      return item;
-    }
-    const urlParts = compact(item.url.split("/"));
-    item.id = urlParts.pop();
-    return item;
-  });
+  const items = resp.results.map(parseItem);
 
   const addResponse = await postJson(
     `${API_SERVER}/robinhood/${entity}/bulk`,
@@ -55,48 +61,7 @@ async function migrateEntity(entity, url) {
   }
 }
 
-async function migrateList(listName) {
-  const user = jwt.decode(AUTH_TOKEN);
-  try {
-    await deleteJson(`${API_SERVER}/robinhood/${listName}`, {
-      headers: {
-        Authorization: `Bearer ${AUTH_TOKEN}`,
-      },
-    });
-  } catch (e) {
-    if (e.response.statusText != "Not Found") {
-      throw e;
-    }
-  }
-
-  await postJson(
-    `${API_SERVER}`,
-    {
-      type: "robinhood",
-      name: listName,
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${AUTH_TOKEN}`,
-      },
-    }
-  );
-
-  await patchJson(
-    `${API_SERVER}/robinhood/${listName}`,
-    {
-      admins: [user.sub, "DQdO31wITIPGO5g9T3jd3kPDuqvMXPFy@clients"],
-    },
-    {
-      headers: {
-        Authorization: `Bearer ${AUTH_TOKEN}`,
-      },
-    }
-  );
-}
-
 async function migrateAccount() {
-  await migrateList("account");
   const account = await getJson(
     `${ROBINHOOD_API_SERVER}/accounts/${ROBINHOOD_ACCOUNT_NUMBER}/`,
     {
@@ -131,14 +96,17 @@ async function migrateAccount() {
 }
 
 async function migrate() {
+  const lists = ["account", "instruments", "quotes", "positions", "orders"];
   await Promise.all(
-    ["positions", "orders"]
-      .map(async (entity) => {
-        await migrateList(entity);
-        await migrateEntity(entity);
-      })
-      .concat(await migrateAccount())
+    lists.map(async (list) => {
+      await migrateList("robinhood", list);
+    })
   );
+  await Promise.all([
+    await migrateAccount(),
+    await migrateEntity("positions"),
+    await migrateEntity("orders"),
+  ]);
 }
 
 // before this, create 2 lists first
