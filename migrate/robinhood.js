@@ -1,7 +1,6 @@
 require("dotenv").config();
 const { getJson, postJson, patchJson, deleteJson } = require("simple-fetch");
 const compact = require("lodash.compact");
-const uniq = require("lodash.uniq");
 
 const AUTH_TOKEN = process.env.AUTH_TOKEN;
 const ROBINHOOD_AUTH_TOKEN = process.env.ROBINHOOD_AUTH_TOKEN;
@@ -65,15 +64,31 @@ async function migratePositions(url) {
   await addListBulk("positions", positions);
 
   const instruments = await Promise.all(
-    uniq(positions.map((position) => getIdFromUrl(position.instrument))).map(
-      async (instrument) => {
+    positions
+      .map((position) => getIdFromUrl(position.instrument))
+      .map(async (instrument) => {
         return await getRobinhoodApi(
           `${ROBINHOOD_API_SERVER}/instruments/${instrument}/`
         );
-      }
-    )
+      })
   );
   await addListBulk("instruments", instruments);
+
+  const quotes = await Promise.all(
+    instruments.map(async (instrument) => {
+      let quote;
+      try {
+        quote = await getRobinhoodApi(
+          `${ROBINHOOD_API_SERVER}/quotes/${instrument.symbol}/`
+        );
+        quote.id = instrument.symbol;
+      } catch (e) {
+        console.error(`Failed to get quote for ${instrument.symbol}`);
+      }
+      return quote;
+    })
+  );
+  await addListBulk("quotes", compact(quotes));
 
   if (resp.next) {
     await migratePositions(resp.next);
@@ -136,11 +151,7 @@ async function migrate() {
       await migrateList("robinhood", list);
     })
   );
-  await Promise.all([
-    await migrateAccount(),
-    await migratePositions(),
-    await migrateOrders(),
-  ]);
+  await Promise.all([migrateAccount(), migratePositions(), migrateOrders()]);
 }
 
 // before this, create 2 lists first
