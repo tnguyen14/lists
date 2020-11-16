@@ -1,6 +1,7 @@
 require("dotenv").config();
 const { getJson, postJson, patchJson, deleteJson } = require("simple-fetch");
-const compact = require("lodash/compact");
+const compact = require("lodash.compact");
+const uniq = require("lodash.uniq");
 
 const AUTH_TOKEN = process.env.AUTH_TOKEN;
 const ROBINHOOD_AUTH_TOKEN = process.env.ROBINHOOD_AUTH_TOKEN;
@@ -27,23 +28,18 @@ function parseItem(item) {
   return item;
 }
 
-async function migrateEntity(entity, url) {
-  const requestUrl = url || `${ROBINHOOD_API_SERVER}/${entity}/`;
-  // resp has properties: next, previous, results
-  const resp = await getJson(requestUrl, {
+async function getRobinhoodApi(url) {
+  return await getJson(url, {
     headers: {
       Authorization: `Bearer ${ROBINHOOD_AUTH_TOKEN}`,
     },
   });
-  if (!resp.results.length) {
-    console.log(`No results found for ${requestUrl}`);
-    return;
-  }
-  console.log(`Migrating ${resp.results.length} items for ${entity}...`);
-  const items = resp.results.map(parseItem);
+}
 
+async function addListBulk(listName, items) {
+  console.log(`Adding ${items.length} items to ${listName}...`);
   const addResponse = await postJson(
-    `${API_SERVER}/robinhood/${entity}/bulk`,
+    `${API_SERVER}/robinhood/${listName}/bulk`,
     items,
     {
       headers: {
@@ -53,11 +49,49 @@ async function migrateEntity(entity, url) {
   );
 
   if (!addResponse.success) {
-    throw new Error(`Failed to add for ${entity} from ${requestUrl}`);
+    throw new Error(`Failed to add items to ${listName}`);
   }
+}
+
+async function migratePositions(url) {
+  const requestUrl = url || `${ROBINHOOD_API_SERVER}/positions/`;
+  // resp has properties: next, previous, results
+  const resp = await getRobinhoodApi(requestUrl);
+  if (!resp.results.length) {
+    console.log(`No results found for ${requestUrl}`);
+    return;
+  }
+  const positions = resp.results.map(parseItem);
+  await addListBulk("positions", positions);
+
+  const instruments = await Promise.all(
+    uniq(positions.map((position) => getIdFromUrl(position.instrument))).map(
+      async (instrument) => {
+        return await getRobinhoodApi(
+          `${ROBINHOOD_API_SERVER}/instruments/${instrument}/`
+        );
+      }
+    )
+  );
+  await addListBulk("instruments", instruments);
 
   if (resp.next) {
-    await migrateEntity(entity, resp.next);
+    await migratePositions(resp.next);
+  }
+}
+
+async function migrateOrders(url) {
+  const requestUrl = url || `${ROBINHOOD_API_SERVER}/orders/`;
+  // resp has properties: next, previous, results
+  const resp = await getRobinhoodApi(requestUrl);
+  if (!resp.results.length) {
+    console.log(`No results found for ${requestUrl}`);
+    return;
+  }
+  await addListBulk("orders", resp.results);
+
+  if (resp.next) {
+    await migrateOrders(resp.next);
   }
 }
 
@@ -104,8 +138,8 @@ async function migrate() {
   );
   await Promise.all([
     await migrateAccount(),
-    await migrateEntity("positions"),
-    await migrateEntity("orders"),
+    await migratePositions(),
+    await migrateOrders(),
   ]);
 }
 
