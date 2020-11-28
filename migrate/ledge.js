@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { getJson, patchJson, postJson, deleteJson } = require("simple-fetch");
+const { getJson, patchJson, postJson } = require("simple-fetch");
 const qs = require("qs");
 const migrateList = require("./create-list");
 
@@ -53,7 +53,7 @@ async function migrateTransactionsInChunk(authToken, before) {
 }
 
 async function migrate() {
-  migrateList("ledge", "tri");
+  await migrateList("ledge", "tri");
 
   const account = await getJson(`${OLD_SERVER_URL}/accounts/daily`, {
     headers: {
