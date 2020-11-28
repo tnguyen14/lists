@@ -7,6 +7,7 @@ const {
   getList,
   createList,
   updateList,
+  updateListMeta,
   deleteList,
   getItems,
   getItem,
@@ -163,6 +164,15 @@ module.exports = async function (fastify, opts) {
         );
       }
       return data.meta;
+    })
+  );
+
+  fastify.patch(
+    "/:type/:name/meta",
+    handleRequest(async (request) => {
+      const { user, params, body } = request;
+      const { type, name } = params;
+      return await updateListMeta(user, type, name, body);
     })
   );
 

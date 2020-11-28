@@ -78,6 +78,27 @@ async function updateList(user, type, name, payload) {
   return { success: true };
 }
 
+async function updateListMeta(user, type, name, payload) {
+  const { ref, data } = await getList(user, type, name);
+  if (!data) {
+    throw httpErrors.notFound(`"${name}" is not found.`);
+  }
+  if (!isUserAdmin(user, data)) {
+    throw httpErrors.unauthorized(
+      "user is not authorized to perform modification of list"
+    );
+  }
+  await ref.set(
+    {
+      meta: {
+        ...payload,
+      },
+    },
+    { merge: true }
+  );
+  return { success: true };
+}
+
 async function deleteList(user, type, name) {
   const { ref, data } = await getList(user, type, name);
   if (!data) {
@@ -251,6 +272,7 @@ module.exports = {
   getList,
   createList,
   updateList,
+  updateListMeta,
   deleteList,
   getItems,
   getItem,

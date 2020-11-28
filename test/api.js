@@ -146,7 +146,8 @@ test("lists", (t) => {
       try {
         const resp = await patch("/testType/listName", {
           meta: {
-            foo: "bar",
+            prop1: "value1",
+            prop2: "value2",
           },
           admins: ["testuser", "testuser2"],
         });
@@ -172,7 +173,7 @@ test("lists", (t) => {
           "/testType/listName",
           {
             meta: {
-              foo: "baz",
+              prop1: "differentValue",
             },
           },
           {
@@ -191,7 +192,7 @@ test("lists", (t) => {
       try {
         const resp = await get("/testType/listName");
         t.match(resp, {
-          meta: { foo: "bar" },
+          meta: { prop1: "value1", prop2: "value2" },
           admins: ["testuser", "testuser2"],
           editors: [],
           viewers: [],
@@ -240,17 +241,52 @@ test("lists", (t) => {
       try {
         const resp = await get("/testType/listName/meta");
         t.match(resp, {
-          foo: "bar",
+          prop1: "value1",
+          prop2: "value2",
         });
       } catch (e) {
         t.error(e);
       }
     });
-    t.test("not an editor", async (t) => {
+    t.test("not an admin", async (t) => {
       try {
         const resp = await get("/testType/listName/meta", undefined, {
           authorization: "testUser2",
         });
+        t.match(resp, { statusCode: 401, error: "Unauthorized" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+  });
+
+  t.test("update list meta", async (t) => {
+    t.test("expected good", async (t) => {
+      try {
+        const resp = await patch("/testType/listName/meta", {
+          prop1: "differentValue",
+          newArray: ["one", "two"],
+        });
+        t.deepEqual(resp, { success: true });
+        const getResp = await get("/testType/listName/meta");
+        t.deepEqual(getResp, {
+          prop1: "differentValue",
+          prop2: "value2",
+          newArray: ["one", "two"],
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("not an admin", async (t) => {
+      try {
+        const resp = await patch(
+          "/testType/listName/meta",
+          {},
+          {
+            authorization: "testUser2",
+          }
+        );
         t.match(resp, { statusCode: 401, error: "Unauthorized" });
       } catch (e) {
         t.error(e);
