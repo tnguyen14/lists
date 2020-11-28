@@ -35,7 +35,7 @@ async function migrateTransactionsInChunk(authToken, before) {
   );
 
   const addResponse = await postJson(
-    `${LISTS_SERVER_URL}/ledge/tri/bulk`,
+    `${LISTS_SERVER_URL}/ledge/tri/items/bulk`,
     transactions,
     {
       headers: {

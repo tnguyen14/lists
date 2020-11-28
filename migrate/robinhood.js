@@ -38,7 +38,7 @@ async function getRobinhoodApi(url) {
 async function addListBulk(listName, items) {
   console.log(`Adding ${items.length} items to ${listName}...`);
   const addResponse = await postJson(
-    `${API_SERVER}/robinhood/${listName}/bulk`,
+    `${API_SERVER}/robinhood/${listName}/items/bulk`,
     items,
     {
       headers: {

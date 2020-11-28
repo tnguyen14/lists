@@ -23,7 +23,7 @@ async function migrate() {
   await Promise.all(
     articles.map(async (article) => {
       try {
-        await postJson(`${serverUrl}/read/tri/`, article, {
+        await postJson(`${serverUrl}/read/tri/items`, article, {
           headers: {
             Authorization: `Bearer ${authToken}`,
           },
