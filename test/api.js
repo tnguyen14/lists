@@ -238,7 +238,7 @@ test("lists", (t) => {
   t.test("add item to list", async (t) => {
     t.test("expected good", async (t) => {
       try {
-        const resp = await post("/testType/listName", {
+        const resp = await post("/testType/listName/items", {
           id: "testItem",
           prop: "testProp",
         });
@@ -249,7 +249,7 @@ test("lists", (t) => {
     });
     t.test("add in bulk", async (t) => {
       try {
-        const resp = await post("/testType/listName/bulk", [
+        const resp = await post("/testType/listName/items/bulk", [
           {
             id: "bulkItem1",
             prop: "bulkProp1",

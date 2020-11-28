@@ -133,6 +133,7 @@ module.exports = async function (fastify, opts) {
     handleRequest(async (request) => {
       const { user, params } = request;
       const { type, name } = params;
+      console.log(`precated - add items ${type} ${name}`);
       return await createItem(user, type, name, request.body);
     })
   );
@@ -142,6 +143,7 @@ module.exports = async function (fastify, opts) {
     handleRequest(async (request) => {
       const { user, params } = request;
       const { type, name } = params;
+      console.log(`deprecated - add bulk items ${type} ${name}`);
       return await addItemsBulk(user, type, name, request.body);
     })
   );
@@ -168,6 +170,24 @@ module.exports = async function (fastify, opts) {
         throw fastify.httpErrors.notFound(`"${id}" is not found.`);
       }
       return data;
+    })
+  );
+
+  fastify.post(
+    "/:type/:name/items",
+    handleRequest(async (request) => {
+      const { user, params } = request;
+      const { type, name } = params;
+      return await createItem(user, type, name, request.body);
+    })
+  );
+
+  fastify.post(
+    "/:type/:name/items/bulk",
+    handleRequest(async (request) => {
+      const { user, params } = request;
+      const { type, name } = params;
+      return await addItemsBulk(user, type, name, request.body);
     })
   );
 
