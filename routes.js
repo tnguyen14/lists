@@ -133,7 +133,7 @@ module.exports = async function (fastify, opts) {
     handleRequest(async (request) => {
       const { user, params } = request;
       const { type, name } = params;
-      console.log(`precated - add items ${type} ${name}`);
+      console.log(`deprecated - add items ${type} ${name}`);
       return await createItem(user, type, name, request.body);
     })
   );
@@ -145,6 +145,24 @@ module.exports = async function (fastify, opts) {
       const { type, name } = params;
       console.log(`deprecated - add bulk items ${type} ${name}`);
       return await addItemsBulk(user, type, name, request.body);
+    })
+  );
+
+  fastify.get(
+    "/:type/:name/meta",
+    handleRequest(async (request) => {
+      const { user, params } = request;
+      const { type, name } = params;
+      const { snapshot, data } = await getList(user, type, name);
+      if (!snapshot.exists) {
+        throw fastify.httpErrors.notFound();
+      }
+      if (!isUserEditor(user, data)) {
+        throw fastify.httpErrors.unauthorized(
+          "user is not authorized for list"
+        );
+      }
+      return data.meta;
     })
   );
 

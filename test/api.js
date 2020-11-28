@@ -235,6 +235,29 @@ test("lists", (t) => {
     });
   });
 
+  t.test("get list meta", async (t) => {
+    t.test("expected good", async (t) => {
+      try {
+        const resp = await get("/testType/listName/meta");
+        t.match(resp, {
+          foo: "bar",
+        });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+    t.test("not an editor", async (t) => {
+      try {
+        const resp = await get("/testType/listName/meta", undefined, {
+          authorization: "testUser2",
+        });
+        t.match(resp, { statusCode: 401, error: "Unauthorized" });
+      } catch (e) {
+        t.error(e);
+      }
+    });
+  });
+
   t.test("add item to list", async (t) => {
     t.test("expected good", async (t) => {
       try {
