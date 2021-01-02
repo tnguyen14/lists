@@ -17,6 +17,7 @@ const server = require("@tridnguyen/fastify-server")({
     "https://lab.tridnguyen.com",
     "https://tridnguyen.com",
     "https://cbtallc.com",
+    "http://localhost:4003", // cypress testing
   ],
   shouldPerformJwtCheck: (request) => {
     if (publicAccess[request.method]) {
