@@ -1,0 +1,23 @@
+name: Firestore backup
+
+on:
+  workflow_dispatch:
+  schedule:
+    # run test every 2 hours
+    - cron: "0 19 * * *"
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          service_account_email: 'github-actions@build-tridnguyen-com.iam.gserviceaccount.com'
+          service_account_key: ${{ secrets.SA_KEY }}
+          project_id: 'build-tridnguyen-com'
+
+      - name: Backup
+        run: |-
+          gcloud beta firestore export gs://build-tridnguyen-com-firestore-backups
+
