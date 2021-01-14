@@ -19,5 +19,6 @@ jobs:
 
       - name: Backup
         run: |-
+          gcloud components install beta
           gcloud beta firestore export gs://build-tridnguyen-com-firestore-backups
 
