@@ -117,12 +117,23 @@ async function migrateList(token, { type: listType, name: listName }) {
       console.log(`Deleting old list ${listId}`);
       await deleteList(user, listType, listName);
     } catch (e) {
+      console.error(`Error deleting list ${listId}`);
       console.error(e);
     }
-    console.log(`Creating new list ${listId}`);
-    await createList(user, listType, listName);
-    console.log(`Updating new list ${listId} with metadata`);
-    await updateList(user, listType, listName, list);
+    try {
+      console.log(`Creating new list ${listId}`);
+      await createList(user, listType, listName);
+    } catch (e) {
+      console.error(`Error creating new list ${listId}`);
+      throw e;
+    }
+    try {
+      console.log(`Updating new list ${listId} with metadata`);
+      await updateList(user, listType, listName, list);
+    } catch (e) {
+      console.error(`Error updating list metadata ${listId}`);
+      throw e;
+    }
     await migrateItemsInChunks(token, listType, listName);
   } catch (e) {
     if (e.response) {
