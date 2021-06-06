@@ -136,11 +136,8 @@ async function migrateList(token, { type: listType, name: listName }) {
     }
     await migrateItemsInChunks(token, listType, listName);
   } catch (e) {
-    if (e.response) {
-      console.error(e.response);
-    } else {
-      console.error(e);
-    }
+    console.error(`Error migrating list ${listId}`);
+    console.error(e);
   }
 }
 
