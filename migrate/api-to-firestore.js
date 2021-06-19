@@ -1,6 +1,6 @@
 require("dotenv").config();
 
-const { getJson, postJson } = require("simple-fetch");
+const { getJson } = require("simple-fetch");
 const jwt = require("jsonwebtoken");
 const qs = require("qs");
 
@@ -143,17 +143,12 @@ async function migrateList(token, { type: listType, name: listName }) {
 
 async function migrate() {
   try {
-    const tokenResponse = await postJson(
-      `https://${process.env.AUTH0_DOMAIN}/oauth/token`,
-      {
-        client_id: process.env.SERVER_APP_AUTH0_CLIENT_ID,
-        client_secret: process.env.SERVER_APP_AUTH0_CLIENT_SECRET,
-        // audience: `https://${process.env.AUTH0_DOMAIN}/api/v2/`,
-        audience: apiServer,
-        grant_type: "client_credentials",
-      }
-    );
-    const token = tokenResponse.access_token;
+    const { getToken } = await import('@tridnguyen/auth/server.js');
+    const token = await getToken({
+      clientId: process.env.SERVER_APP_AUTH0_CLIENT_ID,
+      clientSecret: process.env.SERVER_APP_AUTH0_CLIENT_SECRET,
+      audience: apiServer
+    })
     await Promise.all(listsToMigrate.map(migrateList.bind(null, token)));
   } catch (e) {
     console.error(e);
