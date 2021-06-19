@@ -41,5 +41,8 @@
   },
   "lint-staged": {
     "*.{js,css,md}": "prettier --write"
+  },
+  "tap": {
+    "check-coverage": false
   }
 }
