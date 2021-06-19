@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { getJson, postJson, patchJson } = require("simple-fetch");
-const compact = require("lodash.compact");
+const compact = require("lodash/compact");
 
 const AUTH_TOKEN = process.env.AUTH_TOKEN;
 const ROBINHOOD_AUTH_TOKEN = process.env.ROBINHOOD_AUTH_TOKEN;
