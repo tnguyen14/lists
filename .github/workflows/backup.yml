@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      - uses: google-github-actions/setup-gcloud@master
         with:
           service_account_email: 'github-actions@build-tridnguyen-com.iam.gserviceaccount.com'
           service_account_key: ${{ secrets.SA_KEY }}
