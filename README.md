@@ -8,7 +8,7 @@ See `test/lists.js` for endpoint documentation.
 
 ```sh
 :; curl -X POST https://lists.cloud.tridnguyen.com/ \
-  -H "Auhorization: Bearer $AUTH_TOKEN" \
+  -H "Authorization: Bearer $AUTH_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"type": "<listType>", "name": "<listName>"}'
 ```

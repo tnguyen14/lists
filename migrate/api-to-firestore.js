@@ -35,6 +35,14 @@ const listsToMigrate = [
     name: "tri",
   },
   {
+    type: "ledge",
+    name: "income",
+  },
+  {
+    type: "ledge",
+    name: "expense",
+  },
+  {
     type: "robinhood",
     name: "positions",
   },
