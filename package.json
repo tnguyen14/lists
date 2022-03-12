@@ -20,7 +20,7 @@
   "dependencies": {
     "@tridnguyen/auth": "^6.1.2",
     "@tridnguyen/fastify-server": "^2.1.2",
-    "@tridnguyen/firestore": "^2.1.0",
+    "@tridnguyen/firestore": "^2.1.1",
     "dotenv": "^8.2.0",
     "lodash": "^4.17.21",
     "qs": "^6.9.4",
