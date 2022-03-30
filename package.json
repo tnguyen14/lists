@@ -2,7 +2,7 @@
   "name": "lists",
   "version": "1.0.0",
   "description": "",
-  "main": "src/server.js",
+  "main": "index.js",
   "scripts": {
     "start": "PORT=13050 nodemon src/server.js",
     "test": "tap --reporter specy"
@@ -33,7 +33,7 @@
     "lint-staged": "^10.2.11",
     "nodemon": "^2.0.6",
     "prettier": "^2.0.5",
-    "tap": "^15.1.6"
+    "tap": "^16.0.1"
   },
   "husky": {
     "hooks": {
