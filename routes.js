@@ -13,9 +13,9 @@ const {
   deleteItem,
 } = require("./lists");
 
-const { isUserAdmin, isUserEditor } = require("./authorization");
+const { isUserEditor } = require("./authorization");
 
-module.exports = async function (fastify, opts) {
+module.exports = async function (fastify) {
   function handleRequest(fn) {
     return async (request, reply) => {
       try {

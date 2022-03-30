@@ -178,7 +178,7 @@ async function getItem(user, listType, listName, itemId) {
 }
 
 async function createItem(user, listType, listName, item) {
-  const { ref: listRef, data: listData } = await getList(
+  const { data: listData } = await getList(
     user,
     listType,
     listName
@@ -200,7 +200,7 @@ async function createItem(user, listType, listName, item) {
 }
 
 async function updateItem(user, listType, listName, itemId, updatedItem) {
-  const { ref: listRef, data: listData } = await getList(
+  const { data: listData } = await getList(
     user,
     listType,
     listName
@@ -250,7 +250,7 @@ async function addItemsBulk(user, listType, listName, items) {
 }
 
 async function deleteItem(user, listType, listName, itemId) {
-  const { ref: listRef, data: listData } = await getList(
+  const { data: listData } = await getList(
     user,
     listType,
     listName
