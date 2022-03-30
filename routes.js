@@ -1,7 +1,3 @@
-const firestore = require("@tridnguyen/firestore");
-
-const listsRef = firestore.collection("lists");
-
 const {
   getLists,
   getList,
