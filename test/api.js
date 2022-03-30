@@ -5,7 +5,7 @@ const server = require("@tridnguyen/fastify-server")({
   shouldPerformJwtCheck: false,
 });
 
-server.register(require("../routes"));
+server.register(require("../src/routes"));
 
 server.addHook("preHandler", (request, reply, done) => {
   const user = (request.headers && request.headers.authorization) || "testuser";

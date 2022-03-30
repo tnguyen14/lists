@@ -9,7 +9,7 @@ const {
   createList,
   updateList,
   addItemsBulk,
-} = require("../lists");
+} = require("../src/firestore");
 
 const apiServer = process.env.API_SERVER;
 

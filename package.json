@@ -2,9 +2,9 @@
   "name": "lists",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "PORT=13050 nodemon server.js",
+    "start": "PORT=13050 nodemon src/server.js",
     "test": "tap --reporter specy"
   },
   "repository": {

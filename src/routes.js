@@ -11,7 +11,7 @@ const {
   updateItem,
   addItemsBulk,
   deleteItem,
-} = require("./lists");
+} = require("./firestore");
 
 const { isUserEditor } = require("./authorization");
 

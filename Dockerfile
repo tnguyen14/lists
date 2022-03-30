@@ -10,5 +10,5 @@ FROM node:16-alpine
 
 WORKDIR /src
 COPY --from=0 /src .
-COPY . .
+COPY src .
 CMD ["node", "server.js"]
