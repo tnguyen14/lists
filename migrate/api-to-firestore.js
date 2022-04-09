@@ -125,29 +125,6 @@ async function migrateList(token, { type: listType, name: listName }) {
   }
 }
 
-async function migrate() {
-  try {
-    const { getToken } = await import('@tridnguyen/auth/server.js');
-    const token = await getToken({
-      clientId: process.env.SERVER_APP_AUTH0_CLIENT_ID,
-      clientSecret: process.env.SERVER_APP_AUTH0_CLIENT_SECRET,
-      audience: apiServer
-    })
-    await Promise.all(listsToMigrate.map(migrateList.bind(null, token)));
-  } catch (e) {
-    console.error(e);
-  }
-}
-
-if (require.main === module) {
-  try {
-    migrate();
-  } catch (e) {
-    console.error(e);
-    process.exit(1);
-  }
-}
-
 module.exports = {
-  migrate,
+  migrateList,
 };

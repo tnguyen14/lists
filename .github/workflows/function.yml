@@ -30,7 +30,7 @@ jobs:
       - name: migrate
         env:
           FUNCTION_NAME: lists-migrate-api-to-firestore
-          ENTRY_POINT: migrate
+          ENTRY_POINT: apiToFirestore
           SCHEDULER_JOB_NAME: lists-migrate-api-to-firestore-trigger
           SCHEDULE: 30 19 * * *
         run: |-
