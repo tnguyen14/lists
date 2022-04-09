@@ -23,6 +23,7 @@
 const superAdmins = {
   me: "google-oauth2|102956012089794272878",
   serverApp: "DQdO31wITIPGO5g9T3jd3kPDuqvMXPFy@clients",
+  test: "testuser"
 };
 
 function isUserSuperAdmin(user) {
