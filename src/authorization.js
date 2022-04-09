@@ -30,15 +30,24 @@ function isUserSuperAdmin(user) {
   return superAdmins.includes(user.sub);
 }
 function isUserAdmin(user, listData) {
+  if (!listData || !listData.admins) {
+    return false;
+  }
   return listData.admins.includes(user.sub);
 }
 
 function isUserEditor(user, listData) {
+  if (!listData || !listData.admins) {
+    return false;
+  }
   const editors = listData.admins.concat(listData.editors);
   return editors.includes(user.sub);
 }
 
 function isUserViewer(user, listData) {
+  if (!listData || !listData.admins) {
+    return false;
+  }
   const viewers = listData.admins.concat(listData.viewers, listData.editors);
   if (!viewers.includes("public") && !viewers.includes(user.sub)) {
     return false;
