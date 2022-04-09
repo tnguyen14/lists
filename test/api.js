@@ -62,7 +62,7 @@ test("lists", (t) => {
   t.test("clean up any existing list", async (t) => {
     try {
       const resp = await del("/");
-      t.deepEqual(resp, { success: true });
+      t.same(resp, { success: true });
     } catch (e) {
       t.error(e);
     }
@@ -71,7 +71,7 @@ test("lists", (t) => {
   t.test("empty lists at beginning", async (t) => {
     try {
       const resp = await get("/");
-      t.deepEqual(resp, [], "there should be no list at the beginning");
+      t.same(resp, [], "there should be no list at the beginning");
     } catch (e) {
       t.error(e);
     }
@@ -106,13 +106,13 @@ test("lists", (t) => {
           type: "testType",
           name: "listName",
         });
-        t.deepEqual(resp, { success: true });
+        t.same(resp, { success: true });
         const publicResp = await post("/", {
           type: "testType",
           name: "publicList",
           viewers: ["public"],
         });
-        t.deepEqual(publicResp, { success: true });
+        t.same(publicResp, { success: true });
         const getPublic = await get("/testType/publicList");
         t.match(getPublic, {
           admins: ["testuser"],
@@ -215,7 +215,7 @@ test("lists", (t) => {
     t.test("doesn't exist", async (t) => {
       try {
         const resp = await get("/testType/unknownList");
-        t.deepEqual(resp, {
+        t.same(resp, {
           statusCode: 404,
           error: "Not Found",
           message: "Not Found",
@@ -267,9 +267,9 @@ test("lists", (t) => {
           prop1: "differentValue",
           newArray: ["one", "two"],
         });
-        t.deepEqual(resp, { success: true });
+        t.same(resp, { success: true });
         const getResp = await get("/testType/listName/meta");
-        t.deepEqual(getResp, {
+        t.same(getResp, {
           prop1: "differentValue",
           prop2: "value2",
           newArray: ["one", "two"],
@@ -301,7 +301,7 @@ test("lists", (t) => {
           id: "testItem",
           prop: "testProp",
         });
-        t.deepEqual(resp, { success: true });
+        t.same(resp, { success: true });
       } catch (e) {
         t.error(e);
       }
@@ -325,7 +325,7 @@ test("lists", (t) => {
             search: "found",
           },
         ]);
-        t.deepEqual(resp, { success: true });
+        t.same(resp, { success: true });
       } catch (e) {
         t.error(e);
       }
@@ -346,7 +346,7 @@ test("lists", (t) => {
           id: "testItem",
           prop: "testProp",
         });
-        t.deepEqual(resp, {
+        t.same(resp, {
           statusCode: 409,
           error: "Conflict",
           message: 'Item "testItem" already exists',
@@ -384,7 +384,7 @@ test("lists", (t) => {
             authorization: "editor",
           }
         );
-        t.deepEqual(resp, { success: true });
+        t.same(resp, { success: true });
       } catch (e) {
         t.error(e);
       }
@@ -446,7 +446,7 @@ test("lists", (t) => {
     t.test("list doesn't exist", async (t) => {
       try {
         const resp = await get("/test/unknown/items");
-        t.deepEqual(resp, {
+        t.same(resp, {
           statusCode: 404,
           error: "Not Found",
           message: "Not Found",
@@ -472,7 +472,7 @@ test("lists", (t) => {
         const resp = await get("/testType/publicList/items", undefined, {
           authorization: "unauthorizedUser",
         });
-        t.deepEqual(resp, [{ id: "testItem", prop: "testProp" }]);
+        t.same(resp, [{ id: "testItem", prop: "testProp" }]);
       } catch (e) {
         t.error(e);
       }
@@ -483,7 +483,7 @@ test("lists", (t) => {
     t.test("expected good", async (t) => {
       try {
         const resp = await get("/testType/listName/items/testItem");
-        t.deepEqual(resp, {
+        t.same(resp, {
           id: "testItem",
           prop: "testProp",
         });
@@ -511,7 +511,7 @@ test("lists", (t) => {
             authorization: "unauthorizedUser",
           }
         );
-        t.deepEqual(resp, { id: "testItem", prop: "testProp" });
+        t.same(resp, { id: "testItem", prop: "testProp" });
       } catch (e) {
         t.error(e);
       }
@@ -525,9 +525,9 @@ test("lists", (t) => {
           prop: "testProp2",
           newProp: "anotherProp",
         });
-        t.deepEqual(resp, { success: true });
+        t.same(resp, { success: true });
         const getResp = await get("/testType/listName/items/testItem");
-        t.deepEqual(getResp, {
+        t.same(getResp, {
           id: "testItem",
           prop: "testProp2",
           newProp: "anotherProp",
@@ -565,7 +565,7 @@ test("lists", (t) => {
             authorization: "editor",
           }
         );
-        t.deepEqual(resp, { success: true });
+        t.same(resp, { success: true });
       } catch (e) {
         t.error(e);
       }
@@ -576,10 +576,10 @@ test("lists", (t) => {
     t.test("expected good", async (t) => {
       try {
         const resp = await del("/testType/listName/items/testItem");
-        t.deepEqual(resp, { success: true });
+        t.same(resp, { success: true });
 
         const getResp = await get("/testType/listName/items/testItem");
-        t.deepEqual(getResp, {
+        t.same(getResp, {
           statusCode: 404,
           error: "Not Found",
           message: '"testItem" is not found.',
@@ -591,7 +591,7 @@ test("lists", (t) => {
     t.test("not found item", async (t) => {
       try {
         const resp = await del("/testType/listName/items/testItem2");
-        t.deepEqual(resp, {
+        t.same(resp, {
           statusCode: 404,
           error: "Not Found",
           message: '"testItem2" is not found.',
@@ -615,7 +615,7 @@ test("lists", (t) => {
         const resp = await del("/testType/publicList/items/testItem", {
           authorization: "editor",
         });
-        t.deepEqual(resp, { success: true });
+        t.same(resp, { success: true });
       } catch (e) {
         t.error(e);
       }
@@ -626,7 +626,7 @@ test("lists", (t) => {
     t.test("list not found", async (t) => {
       try {
         const resp = await del("/testType/listNam");
-        t.deepEqual(resp, {
+        t.same(resp, {
           statusCode: 404,
           error: "Not Found",
           message: '"listNam" is not found.',
@@ -648,11 +648,11 @@ test("lists", (t) => {
     t.test("expected good", async (t) => {
       try {
         const resp = await del("/testType/listName");
-        t.deepEqual(resp, { success: true });
+        t.same(resp, { success: true });
         const publicResp = await del("/testType/publicList");
-        t.deepEqual(publicResp, { success: true });
+        t.same(publicResp, { success: true });
         const getResp = await get("/");
-        t.deepEqual(getResp, []);
+        t.same(getResp, []);
       } catch (e) {
         t.error(e);
       }
