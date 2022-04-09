@@ -56,6 +56,7 @@ function isUserViewer(user, listData) {
 }
 
 module.exports = {
+  superAdmins,
   isUserSuperAdmin,
   isUserAdmin,
   isUserEditor,
