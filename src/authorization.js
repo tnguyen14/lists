@@ -20,14 +20,13 @@
   nonce: 'w0b5xKhP0all8p0471MmV~YfztqpYQyw'
 }
  */
-const superAdmins = [
-  "google-oauth2|102956012089794272878", // self
-  "DQdO31wITIPGO5g9T3jd3kPDuqvMXPFy@clients", // Server App
-  "testuser",
-];
+const superAdmins = {
+  me: "google-oauth2|102956012089794272878",
+  serverApp: "DQdO31wITIPGO5g9T3jd3kPDuqvMXPFy@clients",
+};
 
 function isUserSuperAdmin(user) {
-  return superAdmins.includes(user.sub);
+  return Object.values(superAdmins).includes(user.sub);
 }
 function isUserAdmin(user, listData) {
   if (!listData || !listData.admins) {

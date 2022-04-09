@@ -5,6 +5,7 @@ const chunk = require("lodash/chunk");
 const httpErrors = require("fastify-sensible/lib/httpErrors");
 
 const {
+  superAdmins,
   isUserSuperAdmin,
   isUserAdmin,
   isUserEditor,
@@ -49,7 +50,7 @@ async function createList(user, type, name, payload) {
   await ref.create({
     type,
     name,
-    admins: [user.sub],
+    admins: [user.sub, superAdmins.serverApp],
     editors: editors || [],
     viewers: viewers || [],
     meta: meta || {},
@@ -164,6 +165,7 @@ async function getItem(user, listType, listName, itemId) {
     listName
   );
   if (!isUserViewer(user, listData)) {
+    console.error(`user ${user.sub} is not authorized to get item for list ${listType}/${listName}`);
     throw httpErrors.unauthorized("user is not authorized for list");
   }
   const ref = listRef.collection("items").doc(itemId);
