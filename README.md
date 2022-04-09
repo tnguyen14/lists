@@ -13,6 +13,15 @@ See `test/lists.js` for endpoint documentation.
   -d '{"type": "<listType>", "name": "<listName>"}'
 ```
 
+### Add item to list
+
+```sh
+:; curl -X POST https://lists.cloud.tridnguyen.com/${listType}/${listName}/items \
+  -H "Authorization: Bearer $AUTH_TOKEN" \
+  -H 'Content-Type: application/json' \
+  -d '{"id": "my-item-id", "foo": "bar"}'
+```
+
 ## Migrate from prod to dev
 
 ```shell
