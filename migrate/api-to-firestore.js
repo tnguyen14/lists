@@ -13,33 +13,6 @@ const {
 
 const apiServer = process.env.API_SERVER;
 
-const listsToMigrate = [
-  {
-    type: "checkbook",
-    name: "business-checking",
-  },
-  {
-    type: "checkbook",
-    name: "personal-checking",
-  },
-  {
-    type: "checkbook",
-    name: "square-checking",
-  },
-  {
-    type: "read",
-    name: "tri",
-  },
-  {
-    type: "ledge",
-    name: "tri",
-  },
-  {
-    type: "meta",
-    name: "users"
-  }
-];
-
 async function migrateItemsInChunks(token, listType, listName, before) {
   const chunkSize = 500;
   const user = jwt.decode(token);

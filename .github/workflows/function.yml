@@ -6,8 +6,8 @@ on:
       - master
 
 jobs:
-  deploy:
-    name: Deploy
+  dev:
+    name: Deploy to dev
     runs-on: ubuntu-latest
 
     env:
@@ -27,7 +27,7 @@ jobs:
       # Ideally, should set ingress-settings to "internal-only", but
       # that doesn't seem to be working
       # https://stackoverflow.com/questions/60321764/
-      - name: migrate
+      - name: apiToFirestore
         env:
           FUNCTION_NAME: lists-migrate-api-to-firestore
           ENTRY_POINT: apiToFirestore
