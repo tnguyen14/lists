@@ -148,8 +148,6 @@ async function getItems(user, listType, listName, query) {
   if (orderBy) {
     ref = ref.orderBy(orderBy, order);
   }
-  console.log(ref._queryOptions.fieldFilters[0]);
-  console.log(ref._queryOptions);
   const snapshot = await ref.get();
 
   return {
