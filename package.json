@@ -19,7 +19,7 @@
   "homepage": "https://github.com/tnguyen14/lists#readme",
   "dependencies": {
     "@tridnguyen/auth": "^6.1.2",
-    "@tridnguyen/fastify-server": "^2.1.2",
+    "@tridnguyen/fastify-server": "^3.0.0",
     "@tridnguyen/firestore": "^2.1.1",
     "dotenv": "^8.2.0",
     "lodash": "^4.17.21",
@@ -29,11 +29,11 @@
   "devDependencies": {
     "eslint-plugin-json": "^3.1.0",
     "husky": "^7.0.4",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "lint-staged": "^10.2.11",
     "nodemon": "^2.0.6",
     "prettier": "^2.0.5",
-    "tap": "^16.0.1"
+    "tap": "^1.0.10"
   },
   "husky": {
     "hooks": {
