@@ -2,7 +2,7 @@ const firestore = require("@tridnguyen/firestore");
 const listsRef = firestore.collection("lists");
 const chunk = require("lodash/chunk");
 
-const httpErrors = require("fastify-sensible/lib/httpErrors");
+const httpErrors = require("@fastify/sensible/lib/httpErrors");
 
 const {
   superAdmins,
