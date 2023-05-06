@@ -12,6 +12,7 @@ jobs:
 
     env:
       REGION: us-central1
+      FUNCTION_NAME: lists-migrate-api-to-firestore
 
     steps:
       - name: Checkout
@@ -31,20 +32,19 @@ jobs:
       # Ideally, should set ingress-settings to "internal-only", but
       # that doesn't seem to be working
       # https://stackoverflow.com/questions/60321764/
-      - name: apiToFirestore
+      - name: Deploy apiToFirestore
+        uses: 'google-github-actions/deploy-cloud-functions@v1'
+        with:
+          name: ${{ env.FUNCTION_NAME }}
+          runtime: nodejs16
+          entry_point: apiToFirestore
+          ingress_settings: ALLOW_ALL
+
+      - name: Scheduler
         env:
-          FUNCTION_NAME: lists-migrate-api-to-firestore
-          ENTRY_POINT: apiToFirestore
           SCHEDULER_JOB_NAME: lists-migrate-api-to-firestore-trigger
           SCHEDULE: 30 19 * * *
         run: |-
-          gcloud functions deploy $FUNCTION_NAME \
-            --entry-point=$ENTRY_POINT \
-            --allow-unauthenticated \
-            --region "$REGION" \
-            --runtime nodejs16 \
-            --ingress-settings=all \
-            --trigger-http
-          # gcloud scheduler jobs update http $SCHEDULER_JOB_NAME \
-          #   --schedule="$SCHEDULE" \
-          #   --uri="$(gcloud functions describe $FUNCTION_NAME --format='value(httpsTrigger.url)')"
+          gcloud scheduler jobs update http $SCHEDULER_JOB_NAME \
+            --schedule="$SCHEDULE" \
+            --uri="$(gcloud functions describe $FUNCTION_NAME --format='value(httpsTrigger.url)')"
