@@ -11,24 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      PROJECT_ID: dev-build-tridnguyen-com
       REGION: us-central1
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      # google cloud auth
       - id: auth
         uses: google-github-actions/auth@v1
         with:
           credentials_json: ${{ secrets.SA_KEY_DEV }}
-      # Setup gcloud CLI
-      - uses: google-github-actions/setup-gcloud@v1
-        # with:
-        #   service_account_email: "github-actions@build-tridnguyen-com.iam.gserviceaccount.com"
-        #   service_account_key: ${{ secrets.SA_KEY_DEV }}
-        #   project_id: ${{ env. PROJECT_ID }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
 
       - name: gcloud info
         run: 'gcloud info'
