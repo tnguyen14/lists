@@ -40,11 +40,11 @@ jobs:
           entry_point: apiToFirestore
           ingress_settings: ALLOW_ALL
 
-      - name: Scheduler
-        env:
-          SCHEDULER_JOB_NAME: lists-migrate-api-to-firestore-trigger
-          SCHEDULE: 30 19 * * *
-        run: |-
-          gcloud scheduler jobs update http $SCHEDULER_JOB_NAME \
-            --schedule="$SCHEDULE" \
-            --uri="$(gcloud functions describe $FUNCTION_NAME --format='value(httpsTrigger.url)')"
+      # - name: Scheduler
+      #   env:
+      #     SCHEDULER_JOB_NAME: lists-migrate-api-to-firestore-trigger
+      #     SCHEDULE: 30 19 * * *
+      #   run: |-
+      #     gcloud scheduler jobs update http $SCHEDULER_JOB_NAME \
+      #       --schedule="$SCHEDULE" \
+      #       --uri="$(gcloud functions describe $FUNCTION_NAME --format='value(httpsTrigger.url)')"
