@@ -43,6 +43,9 @@ async function getServerAppToken() {
 exports.apiToFirestore = async (req, res) => {
   try {
     const token = await getServerAppToken();
+    if (!token) {
+      throw new Error('Unable to generate token');
+    }
     await Promise.all(listsToCopy.map(migrateList.bind(null, token)));
     res.status(200).json({
       status: "success",

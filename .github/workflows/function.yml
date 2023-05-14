@@ -40,6 +40,7 @@ jobs:
           entry_point: apiToFirestore
           ingress_settings: ALLOW_ALL
           env_vars_file: apiToFirestoreEnvVars.yml
+          env_vars: SERVER_APP_AUTH0_CLIENT_ID=${{ secrets.SERVER_APP_AUTH0_CLIENT_ID }},SERVER_APP_AUTH0_CLIENT_SECRET=${{ secrets.SERVER_APP_AUTH0_CLIENT_SECRET }}
 
       # - name: Scheduler
       #   env:
