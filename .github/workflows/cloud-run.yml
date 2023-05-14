@@ -71,3 +71,7 @@ jobs:
         with:
           service: ${{ env.SERVICE_NAME }}
           image: "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE_NAME}}:${{ github.sha }}"
+          env_vars: |
+            NODE_ENV=production
+            AUTH0_DOMAIN=tridnguyen.auth0.com
+            AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }}
