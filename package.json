@@ -19,11 +19,11 @@
   "homepage": "https://github.com/tnguyen14/lists#readme",
   "dependencies": {
     "@tridnguyen/auth": "^6.1.2",
-    "@tridnguyen/fastify-server": "^3.2.4",
+    "@tridnguyen/fastify-server": "^4.0.2",
     "@tridnguyen/firestore": "^2.1.1",
     "dotenv": "^8.2.0",
-    "lodash": "^4.17.21",
     "jsonwebtoken": "^9.0.0",
+    "lodash": "^4.17.21",
     "qs": "^6.9.4",
     "simple-fetch": "^2.1.0"
   },
@@ -32,6 +32,7 @@
     "husky": "^7.0.4",
     "lint-staged": "^10.2.11",
     "nodemon": "^2.0.6",
+    "pino-pretty": "^10.0.0",
     "prettier": "^2.0.5",
     "tap": "^16.3.1"
   },
