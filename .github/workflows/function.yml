@@ -39,6 +39,7 @@ jobs:
           runtime: nodejs16
           entry_point: apiToFirestore
           ingress_settings: ALLOW_ALL
+          env_vars_file: apiToFirestoreEnvVars.yml
 
       # - name: Scheduler
       #   env:

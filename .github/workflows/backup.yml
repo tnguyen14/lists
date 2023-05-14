@@ -3,7 +3,6 @@ name: Firestore backup
 on:
   workflow_dispatch:
   schedule:
-    # run test every 2 hours
     - cron: "0 19 * * *"
 
 jobs:
