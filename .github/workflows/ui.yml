@@ -23,6 +23,12 @@ jobs:
           BASE_PATH: '/${{ github.event.repository.name }}'
         run: npm run build
 
+      - name: Upload Artifacts
+        uses: actions/upload-pages-artifact@v2
+        with:
+          # this should match the `pages` option in your adapter-static options
+          path: 'build/'
+
   deploy:
     name: Deploy
     needs: build
@@ -39,11 +45,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
-      - name: Upload Artifacts
-        uses: actions/upload-pages-artifact@v2
-        with:
-          # this should match the `pages` option in your adapter-static options
-          path: 'build/'
       - name: Pages
         id: deployment
         uses: actions/deploy-pages@v2
