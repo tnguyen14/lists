@@ -20,11 +20,12 @@ jobs:
 
       - name: Build
         env:
-          BASE_PATH: 'tridnguyen.com/lists'
+          BASE_PATH: '/${{ github.event.repository.name }}'
         run: npm run build
 
   deploy:
     name: Deploy
+    needs: build
     runs-on: ubuntu-latest
 
     if: github.ref == 'refs/heads/main'
