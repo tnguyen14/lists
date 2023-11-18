@@ -112,21 +112,23 @@ jobs:
   ui_build:
     name: Build ui
     runs-on: ubuntu-latest
-    working-directory: ui
 
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
       - name: Install deps
+        working-directory: ui
         run: npm ci
 
       - name: Build
+        working-directory: ui
         env:
           BASE_PATH: 'tridnguyen.com/lists'
         run: npm run build
 
       - name: Upload artifacts
+        working-directory: ui
         if: github.ref == 'refs/heads/main'
         uses: actions/upload-pages-artifact@v2
         with:
