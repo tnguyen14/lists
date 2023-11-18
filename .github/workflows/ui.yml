@@ -28,7 +28,15 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
-    if: github.ref == 'refs/heads/main'
+    # if: github.ref == 'refs/heads/main'
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Upload artifacts
@@ -37,3 +45,6 @@ jobs:
           # this should match the `pages` option in your adapter-static options
           path: 'build/'
 
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v2
