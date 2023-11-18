@@ -28,6 +28,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
 
+    if: github.ref == 'refs/heads/main'
+
     permissions:
       pages: write
       id-token: write
@@ -42,6 +44,6 @@ jobs:
         with:
           # this should match the `pages` option in your adapter-static options
           path: 'build/'
-      # - name: Pages
-      #   id: deployment
-      #   uses: actions/deploy-pages@v2
+      - name: Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
