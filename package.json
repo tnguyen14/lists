@@ -47,6 +47,7 @@
   "tap": {
     "reporter": "base",
     "timeout": 60,
-    "allow-incomplete-coverage": true
+    "allow-incomplete-coverage": true,
+    "exclude": ["ui/**"]
   }
 }

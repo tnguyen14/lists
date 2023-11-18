@@ -1,4 +1,4 @@
-name: CI/CD for UI
+name: UI CI/CD
 
 on: push
 
