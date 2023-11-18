@@ -3,7 +3,7 @@ name: Cloud Functions
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   dev:

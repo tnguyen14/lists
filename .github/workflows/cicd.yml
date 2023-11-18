@@ -6,10 +6,10 @@ on: push
 # on:
 #   push:
 #     branches:
-#     - master
+#     - main
 #   pull_request:
 #     branches:
-#     - master
+#     - main
 
 
 jobs:
@@ -69,7 +69,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
 
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/main'
 
     env:
       PROJECT_ID: build-tridnguyen-com
