@@ -36,6 +36,7 @@ jobs:
     name: Publish to Github Packages
     needs: test
     runs-on: ubuntu-latest
+
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository  }}

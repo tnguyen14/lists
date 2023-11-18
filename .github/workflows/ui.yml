@@ -22,3 +22,28 @@ jobs:
         env:
           BASE_PATH: '/${{ github.event.repository.name }}'
         run: npm run build
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+
+    if: github.ref == 'refs/heads/main'
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Upload Artifacts
+        uses: actions/upload-pages-artifact@v2
+        with:
+          # this should match the `pages` option in your adapter-static options
+          path: 'build/'
+      - name: Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
