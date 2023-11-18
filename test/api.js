@@ -55,7 +55,7 @@ async function patch(url, payload, headers) {
 }
 
 test("lists", (t) => {
-  t.tearDown(async () => {
+  t.teardown(async () => {
     await del("/");
     await server.close();
   });

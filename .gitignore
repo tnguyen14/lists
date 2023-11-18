@@ -3,3 +3,4 @@ node_modules
 credentials
 .github/workflows/secrets
 .nyc_output
+.tap
