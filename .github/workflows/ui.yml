@@ -1,0 +1,38 @@
+name: CI/CD for UI
+
+on: push
+
+defaults:
+  run:
+    working-directory: ui
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        env:
+          BASE_PATH: 'tridnguyen.com/lists'
+        run: npm run build
+
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Upload artifacts
+        uses: actions/upload-pages-artifact@v2
+        with:
+          # this should match the `pages` option in your adapter-static options
+          path: 'build/'
+

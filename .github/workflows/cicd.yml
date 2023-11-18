@@ -108,36 +108,3 @@ jobs:
             NODE_ENV=production
             AUTH0_DOMAIN=tridnguyen.auth0.com
             AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }}
-
-  ui_build:
-    name: Build ui
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Install deps
-        working-directory: ui
-        run: npm ci
-
-      - name: Build
-        working-directory: ui
-        env:
-          BASE_PATH: 'tridnguyen.com/lists'
-        run: npm run build
-
-  ui_deploy:
-    name: Deploy ui
-    runs-on: ubuntu-latest
-
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - name: Upload artifacts
-        working-directory: ui
-        uses: actions/upload-pages-artifact@v2
-        with:
-          # this should match the `pages` option in your adapter-static options
-          path: 'build/'
-
