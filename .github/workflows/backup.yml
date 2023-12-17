@@ -10,11 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: google-github-actions/setup-gcloud@v0
+      - uses: google-github-actions/auth@v2
         with:
-          service_account_email: 'github-actions@build-tridnguyen-com.iam.gserviceaccount.com'
-          service_account_key: ${{ secrets.SA_KEY }}
-          project_id: 'build-tridnguyen-com'
+          credentials_json: ${{ secrets.SA_KEY }}
+      - uses: google-github-actions/setup-gcloud@v2
 
       - name: Backup
         run: |-
