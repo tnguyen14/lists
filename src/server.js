@@ -18,8 +18,8 @@ const server = require("@tridnguyen/fastify-server")({
   auth0ClientId: process.env.AUTH0_CLIENT_ID,
   audience: process.env.API_SERVER,
   allowedOrigins: [
-    "https://lab.tridnguyen.com",
     "https://tridnguyen.com",
+    "https://ledge-lake.vercel.app",
     "https://cbtallc.com",
     "http://localhost:4003", // ledge
     "http://localhost:4004", // checkbook
