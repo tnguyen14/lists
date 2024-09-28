@@ -1,17 +1,31 @@
 <script>
+	/*
+	import type {Auth0Client} from '@auth0/auth0-spa-js';
+	*/
 	import { onMount } from 'svelte';
 	import {goto} from '$app/navigation';
-	import { getAuth} from '$lib/authState.svelte.js';
+	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES } from '$lib/authState.svelte.js';
 	import createAuth from '@tridnguyen/auth/spa';
-	const {state: authState} = getAuth();
+	/**
+	 * @type {Auth0Client}
+	 */
 	let auth0;
-async function loadAuth() {
-	if (!authState.isAuthenticated) {
-		return;
+	async function loadAuth() {
+		if (!auth0) {
+			throw new Error('auth0 instance has not been instantiated');
+		}
+		if (!isAuthenticated) {
+			return;
+		}
+		try {
+			const accessToken = await auth0.getTokenSilently();
+			token.set(accessToken);
+		} catch (e) {
+			console.error(e);
+			isAuthenticated.set(false);
+		}
+		user.set(await auth0.getUser());
 	}
-	authState.token = await auth0.getTokenSilently();
-	authState.user = await auth0.getUser();
-}
 	onMount(async () => {
 		auth0 = await createAuth({
 			clientId: 'dXrVfRywvgZJcf5J1z74sGXmgDfsK5AK'
@@ -21,41 +35,46 @@ async function loadAuth() {
 			location.search.includes("code=") ||
 			location.search.includes("error=")) {
 			console.log("handling callback");
-			authState.authStatus = "Verifying authentication..."
+			authStatus.set(AUTH_STATUSES.pendingVerify)
 			try {
 				await auth0.handleRedirectCallback();
 			} catch (e) {
 				console.error(e);
 			}
-			authState.authStatus = "";
+			authStatus.set("");
 			goto("/", {replaceState: true});
 		}
-		authState.isAuthenticated = await auth0.isAuthenticated();
-		if (!authState.isAuthenticated) {
-			authState.authStatus = "Please log in to continue.";
+		isAuthenticated.set(await auth0.isAuthenticated());
+		if (!$isAuthenticated) {
 			return;
 		}
-		authState.authStatus = "User is logged in";
+		authStatus.set(AUTH_STATUSES.loggedIn);
 		await loadAuth();
-		if (authState.user) {
-			authState.authStatus = `Hello, ${authState.user.name}`;
+		if ($user) {
+			authStatus.set(`Hello, ${$user.name}`);
 		}
 	});
 	function login() {
+		if (!auth0) {
+			throw new Error('auth0 instance has not been instantiated');
+		}
 		auth0.loginWithRedirect();
 	}
 	function logout() {
-		authState.authStatus = "Logging out...";
+		if (!auth0) {
+			throw new Error('auth0 instance has not been instantiated');
+		}
+		authStatus.set(AUTH_STATUSES.pendingLogout);
 		auth0.logout();
-		authState.authStatus = "";
+		authStatus.set(AUTH_STATUSES.initial);
 	}
 </script>
 
 <div class="main">
 	<h1>Lists</h1>
-		<p>{authState.authStatus}</p>
+		<p>{$authStatus}</p>
 	<p>
-		{#if authState.isAuthenticated}
+		{#if $isAuthenticated}
 			<button on:click={logout}>Log Out</button>
 		{:else}
 			<button on:click={login}>Log In</button>
