@@ -1,0 +1,13 @@
+services:
+  api:
+    build: .
+    ports:
+      - "13050:13050"
+    volumes:
+      - .:/src
+  ui:
+    build: ui
+    volumes:
+      - ./ui:/src
+    ports:
+      - "5173:5173"

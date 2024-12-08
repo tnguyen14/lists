@@ -6,7 +6,7 @@ COPY package.json package-lock.json ./
 
 RUN npm ci --prod
 
-FROM node:16-alpine
+FROM node:lts-alpine
 
 WORKDIR /src
 COPY --from=0 /src .
