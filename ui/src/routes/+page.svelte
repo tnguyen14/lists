@@ -28,10 +28,13 @@
 	}
 	onMount(async () => {
 		auth0 = await createAuth({
-			clientId: 'dXrVfRywvgZJcf5J1z74sGXmgDfsK5AK'
+			clientId: 'dXrVfRywvgZJcf5J1z74sGXmgDfsK5AK',
+			authorizationParams: {
+				redirect_uri: window.location.href
+			}
 		});
 
-		if (location.search.includes("state=") && 
+		if (location.search.includes("state=") &&
 			location.search.includes("code=") ||
 			location.search.includes("error=")) {
 			console.log("handling callback");
