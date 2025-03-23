@@ -7,7 +7,7 @@
 
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES } from '$lib/authState.svelte.js';
+	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES } from '$lib/stores/auth.js';
 	import createAuth from '@tridnguyen/auth/spa';
 	/** @type {Auth0Client|undefined} */
 	let auth0;
