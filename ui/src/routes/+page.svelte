@@ -14,17 +14,28 @@
 		if (!auth0) {
 			throw new Error('auth0 instance has not been instantiated');
 		}
-		if (!isAuthenticated) {
+		if (!$isAuthenticated) {
+			console.log('Not authenticated, skipping token fetch');
 			return;
 		}
+
 		try {
+			console.log('Retrieving access token');
 			const accessToken = await auth0.getTokenSilently();
+
+			console.log('Token retrieved successfully');
 			token.set(accessToken);
+
+			// Get user information
+			const userInfo = await auth0.getUser();
+			console.log('User info retrieved');
+			user.set(userInfo);
 		} catch (e) {
-			console.error(e);
+			console.error('Error in loadAuth:', e);
+			if (e.error === 'login_required' || e.error === 'unauthorized') {
 			isAuthenticated.set(false);
 		}
-		user.set(await auth0.getUser());
+		}
 	}
 	onMount(async () => {
 		auth0 = await createAuth({
@@ -34,27 +45,43 @@
 			}
 		});
 
+		// Handle redirect callback if present in URL
 		if (location.search.includes("state=") &&
-			location.search.includes("code=") ||
-			location.search.includes("error=")) {
-			console.log("handling callback");
-			authStatus.set(AUTH_STATUSES.pendingVerify)
+			(location.search.includes("code=") || location.search.includes("error="))) {
+			console.log("Handling auth callback");
+			authStatus.set(AUTH_STATUSES.pendingVerify);
 			try {
 				await auth0.handleRedirectCallback();
+				console.log("Callback handled successfully");
+				// Clear URL parameters
+				goto("/", {replaceState: true});
 			} catch (e) {
-				console.error(e);
+				console.error("Error handling callback:", e);
+				authStatus.set(AUTH_STATUSES.error);
+				isAuthenticated.set(false);
+				return;
 			}
-			authStatus.set("");
-			goto("/", {replaceState: true});
 		}
-		isAuthenticated.set(await auth0.isAuthenticated());
-		if (!$isAuthenticated) {
+
+		// Check authentication state
+		try {
+			const authenticated = await auth0.isAuthenticated();
+			console.log("Authentication state:", authenticated);
+			isAuthenticated.set(authenticated);
+
+			if (!authenticated) {
+				authStatus.set(AUTH_STATUSES.initial);
 			return;
 		}
 		authStatus.set(AUTH_STATUSES.loggedIn);
 		await loadAuth();
 		if ($user) {
 			authStatus.set(`Hello, ${$user.name}`);
+			}
+		} catch (authError) {
+			console.error("Authentication check error:", authError);
+			authStatus.set(AUTH_STATUSES.error);
+			isAuthenticated.set(false);
 		}
 	});
 	function login() {

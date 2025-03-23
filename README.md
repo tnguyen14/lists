@@ -33,3 +33,11 @@ See `test/lists.js` for endpoint documentation.
 :; export API_SERVER=https://lists.cloud.tridnguyen.com
 :; node migrate/api-to-firestore.js
 ```
+
+## Local Development
+
+```shell
+docker compose up
+```
+
+UI is served at <http:/localhost:5173>. API is at <http://localhost:13050>.
