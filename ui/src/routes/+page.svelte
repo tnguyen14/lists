@@ -80,7 +80,7 @@
 			domain: 'tridnguyen.auth0.com',
 			clientId: 'dXrVfRywvgZJcf5J1z74sGXmgDfsK5AK',
 			authorizationParams: {
-				redirect_uri: window.location.origin,
+				redirect_uri: window.location.href,
 				audience: 'https://lists.cloud.tridnguyen.com',
 				scope: 'openid profile email read:list write:list'
 			},
@@ -122,7 +122,7 @@
 		authStatus.set(AUTH_STATUSES.pendingVerify);
 		auth0.loginWithRedirect({
 			authorizationParams: {
-				redirect_uri: window.location.origin
+				redirect_uri: window.location.href
 			}
 		});
 	}
