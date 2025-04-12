@@ -1,5 +1,4 @@
 <script>
-  import { onMount } from 'svelte';
   import { token } from '$lib/stores/auth';
 
   let listsByType = {};
