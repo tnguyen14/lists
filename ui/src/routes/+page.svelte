@@ -14,7 +14,7 @@
 
 	/** @type {Auth0Client|undefined} */
 	let auth0;
-	const baseUrl = window.location.origin + base;
+	let baseUrl = '';
 
 	async function loadAuth() {
 		if (!auth0) {
@@ -77,6 +77,7 @@
 	}
 
 	onMount(async () => {
+		baseUrl = window.location.origin + base;
 		auth0 = await createAuth({
 			domain: 'tridnguyen.auth0.com',
 			clientId: 'dXrVfRywvgZJcf5J1z74sGXmgDfsK5AK',
