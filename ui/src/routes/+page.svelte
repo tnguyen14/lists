@@ -75,12 +75,13 @@
 	}
 
 	onMount(async () => {
-
+		const baseUrl = window.location.origin + import.meta.env.BASE_URL
+		console.log("baseUrl", baseUrl)
 		auth0 = await createAuth({
 			domain: 'tridnguyen.auth0.com',
 			clientId: 'dXrVfRywvgZJcf5J1z74sGXmgDfsK5AK',
 			authorizationParams: {
-				redirect_uri: window.location.href,
+				redirect_uri: baseUrl,
 				audience: 'https://lists.cloud.tridnguyen.com',
 				scope: 'openid profile email read:list write:list'
 			},
@@ -120,11 +121,7 @@
 			throw new Error('auth0 instance has not been instantiated');
 		}
 		authStatus.set(AUTH_STATUSES.pendingVerify);
-		auth0.loginWithRedirect({
-			authorizationParams: {
-				redirect_uri: window.location.href
-			}
-		});
+		auth0.loginWithRedirect();
 	}
 
 	function logout() {
