@@ -10,4 +10,5 @@ export const AUTH_STATUSES = {
     error: "Authentication error occurred"
 }
 export const authStatus = writable(AUTH_STATUSES.initial);
+export const errorMessage = writable('');
 export const token = writable('');

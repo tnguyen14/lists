@@ -8,7 +8,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
-	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES } from '$lib/stores/auth.js';
+	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES, errorMessage } from '$lib/stores/auth.js';
 	import createAuth from '@tridnguyen/auth/spa';
 	import Lists from '$lib/components/Lists.svelte';
 
@@ -71,6 +71,7 @@
 				token.set('');
 			} else {
 				authStatus.set(AUTH_STATUSES.error);
+				errorMessage.set(JSON.stringify(e));
 			}
 			return false;
 		}
@@ -151,6 +152,7 @@
 	<h1>Lists</h1>
 	<p>{baseUrl}</p>
 	<p>{$authStatus}</p>
+	<p>{$errorMessage}</p>
 	<p>
 		{#if $isAuthenticated}
 			<button on:click={logout}>Log Out</button>
