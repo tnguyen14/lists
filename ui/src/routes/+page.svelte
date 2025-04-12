@@ -7,12 +7,14 @@
 
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { base } from '$app/paths';
 	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES } from '$lib/stores/auth.js';
 	import createAuth from '@tridnguyen/auth/spa';
 	import Lists from '$lib/components/Lists.svelte';
 
 	/** @type {Auth0Client|undefined} */
 	let auth0;
+	let baseUrl;
 
 	async function loadAuth() {
 		if (!auth0) {
@@ -75,8 +77,7 @@
 	}
 
 	onMount(async () => {
-		const baseUrl = window.location.origin + import.meta.env.BASE_URL
-		console.log("baseUrl", baseUrl)
+		baseUrl = window.location.origin + base;
 		auth0 = await createAuth({
 			domain: 'tridnguyen.auth0.com',
 			clientId: 'dXrVfRywvgZJcf5J1z74sGXmgDfsK5AK',
@@ -148,6 +149,7 @@
 
 <div class="main">
 	<h1>Lists</h1>
+	<p>{baseUrl}</p>
 	<p>{$authStatus}</p>
 	<p>
 		{#if $isAuthenticated}
