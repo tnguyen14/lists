@@ -5,8 +5,6 @@ on:
     paths:
       - '**'
       - '!ui/**'
-      - '!.github/workflows/deploy-ui.yml'
-      - '.github/workflows/cicd.yml'
 
 # if needs to run on PR, conside using (https://github.community/t/how-to-trigger-an-action-on-push-or-pull-request-but-not-both/16662)
 # on:
