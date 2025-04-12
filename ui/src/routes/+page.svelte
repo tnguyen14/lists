@@ -3,12 +3,14 @@
 	 * @typedef {import('@auth0/auth0-spa-js').Auth0Client} Auth0Client
 	 * @typedef {Object} AuthError
 	 * @property {string} [error] - The error code from Auth0
-	*/
+	 */
 
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES } from '$lib/stores/auth.js';
 	import createAuth from '@tridnguyen/auth/spa';
+	import Lists from '$lib/components/Lists.svelte';
+
 	/** @type {Auth0Client|undefined} */
 	let auth0;
 
@@ -24,10 +26,10 @@
 			isAuthenticated.set(authenticated);
 
 			if (!authenticated) {
-			console.log('Not authenticated, skipping token fetch');
+				console.log('Not authenticated, skipping token fetch');
 				authStatus.set(AUTH_STATUSES.initial);
 				return false;
-		}
+			}
 
 			console.log('Retrieving access token');
 			// Get access token with audience parameter to ensure correct format
@@ -60,7 +62,7 @@
 			/** @type {AuthError} */
 			const e = error;
 			if (e.error === 'login_required' || e.error === 'unauthorized') {
-			isAuthenticated.set(false);
+				isAuthenticated.set(false);
 				authStatus.set(AUTH_STATUSES.initial);
 				// Clear any stale user or token information
 				user.set({});
@@ -70,7 +72,7 @@
 			}
 			return false;
 		}
-		}
+	}
 
 	onMount(async () => {
 
@@ -109,7 +111,7 @@
 			}
 		} else {
 			// If no callback to handle, just load auth state
-		await loadAuth();
+			await loadAuth();
 		}
 	});
 
@@ -149,10 +151,11 @@
 
 <div class="main">
 	<h1>Lists</h1>
-		<p>{$authStatus}</p>
+	<p>{$authStatus}</p>
 	<p>
 		{#if $isAuthenticated}
 			<button on:click={logout}>Log Out</button>
+			<Lists />
 		{:else}
 			<button on:click={login}>Log In</button>
 		{/if}
