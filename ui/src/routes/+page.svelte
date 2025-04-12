@@ -14,7 +14,7 @@
 
 	/** @type {Auth0Client|undefined} */
 	let auth0;
-	let baseUrl;
+	const baseUrl = window.location.origin + base;
 
 	async function loadAuth() {
 		if (!auth0) {
@@ -77,7 +77,6 @@
 	}
 
 	onMount(async () => {
-		baseUrl = window.location.origin + base;
 		auth0 = await createAuth({
 			domain: 'tridnguyen.auth0.com',
 			clientId: 'dXrVfRywvgZJcf5J1z74sGXmgDfsK5AK',
@@ -103,7 +102,7 @@
 				await loadAuth();
 
 				// Clear URL parameters
-				goto("/", {replaceState: true});
+				goto(`/${base}`, {replaceState: true});
 			} catch (e) {
 				console.error("Error handling callback:", e);
 				authStatus.set(AUTH_STATUSES.error);
@@ -139,7 +138,7 @@
 		// Then log out from Auth0
 		auth0.logout({
 			logoutParams: {
-				returnTo: window.location.origin
+				returnTo: baseUrl
 			}
 		});
 
