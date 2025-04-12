@@ -8,5 +8,12 @@ export default defineConfig({
 	},
 	server: {
 		host: true
+	},
+	build: {
+		sourcemap: true
+	},
+	optimizeDeps: {
+		// This ensures proper handling of source maps for dependencies
+		entries: []
 	}
 });
