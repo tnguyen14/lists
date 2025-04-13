@@ -11,6 +11,7 @@
 	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES, errorMessage } from '$lib/stores/auth.js';
 	import createAuth from '@tridnguyen/auth/spa';
 	import Lists from '$lib/components/Lists.svelte';
+	import { Button } from '@sveltestrap/sveltestrap';
 
 	/** @type {Auth0Client|undefined} */
 	let auth0;
@@ -150,15 +151,14 @@
 
 <div class="main">
 	<h1>Lists</h1>
-	<p>{baseUrl}</p>
 	<p>{$authStatus}</p>
 	<p>{$errorMessage}</p>
 	<p>
 		{#if $isAuthenticated}
-			<button on:click={logout}>Log Out</button>
+			<Button on:click={logout}>Log Out</Button>
 			<Lists />
 		{:else}
-			<button on:click={login}>Log In</button>
+			<Button color="primary" on:click={login}>Log In</Button>
 		{/if}
 	</p>
 </div>
