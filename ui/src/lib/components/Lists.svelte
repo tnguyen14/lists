@@ -1,5 +1,6 @@
 <script>
   import { token } from '$lib/stores/auth';
+  import { PUBLIC_API_URL } from '$env/static/public';
 
   let listsByType = {};
   let loading = true;
@@ -17,7 +18,7 @@
     error = null;
 
     try {
-      const response = await fetch('http://localhost:13050/', {
+      const response = await fetch(PUBLIC_API_URL, {
         headers: {
           'Authorization': `Bearer ${$token}`,
           'Content-Type': 'application/json'

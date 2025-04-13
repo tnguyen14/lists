@@ -26,6 +26,7 @@ jobs:
       - name: Build
         env:
           BASE_PATH: '/${{ github.event.repository.name }}'
+          PUBLIC_API_URL: 'https://lists.cloud.tridnguyen.com'
         run: npm run build
 
       - name: Upload Artifacts
