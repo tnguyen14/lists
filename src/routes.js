@@ -13,7 +13,7 @@ const {
   deleteItem,
 } = require("./firestore");
 
-const { isUserEditor } = require("./authorization");
+const { isUserEditor, isUserSuperAdmin } = require("./authorization");
 
 module.exports = async function (fastify) {
   function handleRequest(fn) {
@@ -50,6 +50,20 @@ module.exports = async function (fastify) {
         })
       );
       return { success: true };
+    })
+  );
+
+  // get current user's profile and permissions
+  fastify.get(
+    "/me",
+    handleRequest(async (request) => {
+      const { user } = request;
+      return {
+        id: user.sub,
+        permissions: {
+          isSuperAdmin: isUserSuperAdmin(user)
+        }
+      };
     })
   );
 

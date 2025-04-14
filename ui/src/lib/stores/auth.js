@@ -12,3 +12,4 @@ export const AUTH_STATUSES = {
 export const authStatus = writable(AUTH_STATUSES.initial);
 export const errorMessage = writable('');
 export const token = writable('');
+export const isSuperAdmin = writable(false);

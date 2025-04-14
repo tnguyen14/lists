@@ -8,8 +8,9 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
-	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES, errorMessage } from '$lib/stores/auth.js';
+	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES, errorMessage, isSuperAdmin } from '$lib/stores/auth.js';
 	import createAuth from '@tridnguyen/auth/spa';
+	import { PUBLIC_API_URL } from '$env/static/public';
 	import Lists from './Lists.svelte';
 	import { Button } from '@sveltestrap/sveltestrap';
 
@@ -51,6 +52,26 @@
 			const userInfo = await auth0.getUser();
 			console.log('User info retrieved:', userInfo);
 			user.set(userInfo || {});
+
+			// Check if user is a super admin by asking the backend
+			try {
+				const response = await fetch(`${PUBLIC_API_URL}/me`, {
+					headers: {
+						'Authorization': `Bearer ${accessToken}`,
+						'Content-Type': 'application/json'
+					}
+				});
+
+				if (!response.ok) {
+					console.error('Failed to fetch user data');
+					isSuperAdmin.set(false);
+				}
+				const userData = await response.json();
+				isSuperAdmin.set(userData.permissions?.isSuperAdmin || false);
+			} catch (permError) {
+				console.error('Error fetching user data:', permError);
+				isSuperAdmin.set(false);
+			}
 
 			// Update auth status
 			authStatus.set(AUTH_STATUSES.loggedIn);
@@ -156,7 +177,11 @@
 	<p>
 		{#if $isAuthenticated}
 			<Button on:click={logout}>Log Out</Button>
-			<Lists />
+			{#if $isSuperAdmin}
+				<Lists />
+			{:else}
+				<p>User is not a super admin</p>
+			{/if}
 		{:else}
 			<Button color="primary" on:click={login}>Log In</Button>
 		{/if}
