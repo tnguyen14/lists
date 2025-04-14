@@ -1,6 +1,10 @@
 <script>
+  import { Button } from '@sveltestrap/sveltestrap';
+
   // Takes a single list object as a prop
   export let list;
+  // Function to handle deletion, passed from parent
+  export let onDelete = () => {};
 
   // Define permission types with proper labels
   const permissionTypes = [
@@ -11,7 +15,10 @@
 </script>
 
 <div class="list">
-  <h3 class="list-name">{list.name}</h3>
+  <div class="list-header">
+    <h3 class="list-name">{list.name}</h3>
+    <Button color="danger" size="sm" on:click={() => onDelete(list.type, list.name)}>Delete</Button>
+  </div>
   <div class="permissions">
     <h4>Permissions</h4>
     {#each permissionTypes as permType}
@@ -39,6 +46,13 @@
 
   .list:hover {
     background-color: #f8f9fd;
+  }
+
+  .list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
   }
 
   .list-name {

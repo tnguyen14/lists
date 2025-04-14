@@ -1,22 +1,24 @@
 <script>
   import { token } from '$lib/stores/auth';
   import { PUBLIC_API_URL } from '$env/static/public';
+  import { Button } from '@sveltestrap/sveltestrap';
   import List from './List.svelte';
+  import AddListForm from './AddListForm.svelte';
 
   let listsByType = {};
   let loading = true;
-  let error = "";
+  /** @type string? */
+  let errorMessage = "";
 
-  // Function to fetch lists that we can call whenever token changes
   async function fetchLists() {
     if (!$token) {
-      error = "No authentication token available";
+      errorMessage = "No authentication token available";
       loading = false;
       return;
     }
 
     loading = true;
-    error = null;
+    errorMessage = null;
 
     try {
       const response = await fetch(PUBLIC_API_URL, {
@@ -32,38 +34,92 @@
       }
 
       const fetchedLists = await response.json();
-      // Group lists by their type using Object.groupBy
       listsByType = Object.groupBy(fetchedLists, list => list.type);
       console.log('Lists by type:', listsByType);
       loading = false;
     } catch (e) {
       console.error('Error fetching lists:', e);
-      error = e.message;
+      errorMessage = e.message;
       loading = false;
     }
   }
 
-  // React to changes in the token
   $: if ($token) {
     fetchLists();
+  }
+
+  // Track which list type section has an active add form
+  /** @type string? */
+  let activeListType = null;
+
+  const toggleActiveList = (type) => activeListType = activeListType === type ? null : type;
+
+  async function deleteList(type, name) {
+    if (!confirm(`Are you sure you want to delete the list "${name}" of type "${type}"?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${PUBLIC_API_URL}/${type}/${name}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${$token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete list: ${errorText}`);
+      }
+
+      await fetchLists();
+    } catch (e) {
+      console.error('Error deleting list:', e);
+      errorMessage = e.message;
+    }
   }
 </script>
 
 <div class="lists-container">
+
   {#if loading}
     <p>Getting lists...</p>
-  {:else if error}
-    <p class="error">Error: {error}</p>
+  {:else if errorMessage}
+    <p class="error-message">Error: {errorMessage}</p>
   {:else if Object.keys(listsByType).length === 0}
     <p>No lists available</p>
   {:else}
     <div class="lists-by-type">
       {#each Object.keys(listsByType) as listType (listType)}
         <section class="list-type">
-          <h2>{listType}</h2>
+          <div class="list-type-header">
+            <h3>{listType}</h3>
+            <Button
+              color={activeListType === listType ? "secondary" : "success"}
+              size="sm"
+              on:click={() => toggleActiveList(listType)}
+            >
+              {activeListType === listType ? 'Cancel' : `Add ${listType} List`}
+            </Button>
+          </div>
+
+          {#if activeListType === listType}
+            <div class="type-specific-form">
+              <AddListForm
+                listType={listType}
+                onSuccess={() => {
+                  activeListType = null;
+                  fetchLists();
+                }}
+                onCancel={() => activeListType = null}
+              />
+            </div>
+          {/if}
+
           <div class="lists">
             {#each listsByType[listType] as list (list.name)}
-              <List {list} />
+              <List {list} onDelete={deleteList} />
             {/each}
           </div>
         </section>
@@ -100,7 +156,7 @@
     margin-top: 1rem;
   }
 
-  .error {
+  .error-message {
     color: #d32f2f;
     font-weight: 500;
   }
