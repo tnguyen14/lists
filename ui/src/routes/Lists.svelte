@@ -1,6 +1,7 @@
 <script>
   import { token } from '$lib/stores/auth';
   import { PUBLIC_API_URL } from '$env/static/public';
+  import List from './List.svelte';
 
   let listsByType = {};
   let loading = true;
@@ -64,9 +65,7 @@
           <h3>{listType}</h3>
           <div class="lists">
             {#each listsByType[listType] as list (list.name)}
-              <div class="list">
-                <h4 class="list-name">{list.name}</h4>
-              </div>
+              <List {list} />
             {/each}
           </div>
         </section>
@@ -76,7 +75,7 @@
 </div>
 
 <style>
-    .lists-container {
+  .lists-container {
     margin: 1rem auto 0;
     max-width: 1200px;
   }
@@ -101,25 +100,6 @@
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1rem;
     margin-top: 1rem;
-  }
-
-  .list {
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    padding: 1rem;
-    background-color: white;
-    transition: background-color 0.2s;
-  }
-
-  .list:hover {
-    background-color: #f5f8ff;
-  }
-
-  .list-name {
-    margin: 0 0 0.5rem 0;
-    color: #444;
-    font-size: 1.1rem;
-    font-weight: 500;
   }
 
   .error {
