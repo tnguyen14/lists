@@ -10,7 +10,7 @@
 	import { base } from '$app/paths';
 	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES, errorMessage } from '$lib/stores/auth.js';
 	import createAuth from '@tridnguyen/auth/spa';
-	import Lists from '$lib/components/Lists.svelte';
+	import Lists from './Lists.svelte';
 	import { Button } from '@sveltestrap/sveltestrap';
 
 	/** @type {Auth0Client|undefined} */
