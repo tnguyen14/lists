@@ -50,8 +50,6 @@
 </script>
 
 <div class="lists-container">
-  <h2>Lists</h2>
-
   {#if loading}
     <p>Getting lists...</p>
   {:else if error}
@@ -62,7 +60,7 @@
     <div class="lists-by-type">
       {#each Object.keys(listsByType) as listType (listType)}
         <section class="list-type">
-          <h3>{listType}</h3>
+          <h2>{listType}</h2>
           <div class="lists">
             {#each listsByType[listType] as list (list.name)}
               <List {list} />
@@ -96,9 +94,9 @@
 
 
   .lists {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
     margin-top: 1rem;
   }
 

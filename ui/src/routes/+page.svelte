@@ -174,18 +174,20 @@
 	<h1>Lists</h1>
 	<p>{$authStatus}</p>
 	<p>{$errorMessage}</p>
-	<p>
 		{#if $isAuthenticated}
+		<p>
 			<Button on:click={logout}>Log Out</Button>
+		</p>
 			{#if $isSuperAdmin}
 				<Lists />
 			{:else}
 				<p>User is not a super admin</p>
 			{/if}
 		{:else}
+		<p>
 			<Button color="primary" on:click={login}>Log In</Button>
+		</p>
 		{/if}
-	</p>
 </div>
 
 <style>
