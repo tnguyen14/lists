@@ -12,11 +12,23 @@
     { key: 'editors', label: 'Editors' },
     { key: 'viewers', label: 'Viewers' }
   ];
+
+  let listName = '';
+  if (list) {
+    if (list.name) {
+      listName = list.name;
+    } else {
+      listName = 'This list is missing ID';
+    }
+    if (list.meta && list.meta.displayName) {
+      listName = `${list.meta.displayName} (${list.name})`;
+    }
+  }
 </script>
 
 <div class="list">
   <div class="list-header">
-    <h3 class="list-name">{list.name}</h3>
+    <h3 class="list-name">{listName}</h3>
     <Button color="danger" size="sm" on:click={() => onDelete(list.type, list.name)}>Delete</Button>
   </div>
   <div class="permissions">
