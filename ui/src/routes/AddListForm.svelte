@@ -8,13 +8,14 @@
   export let listType = '';
 
   // Form state
-  let newListName = '';
+  let listId = '';
+  let displayName = ''; // Added field for display name
   let isSubmitting = false;
   let formError = '';
 
   async function createList() {
-    if (!newListName) {
-      formError = 'List name is required';
+    if (!listId) {
+      formError = 'List ID is required';
       return;
     }
 
@@ -30,7 +31,10 @@
         },
         body: JSON.stringify({
           type: listType,
-          name: newListName
+          name: listId,
+          meta: {
+            displayName: displayName
+          }
         })
       });
 
@@ -40,7 +44,8 @@
       }
 
       // Reset form and notify parent
-      newListName = '';
+      listId = '';
+      displayName = ''; // Reset display name
       onSuccess();
     } catch (e) {
       formError = e.message;
@@ -52,20 +57,27 @@
 </script>
 
 <div class="add-form">
-  <h5>Add New {listType} List</h5>
+  <h5>Add a new <em>{listType}</em> list</h5>
 
   {#if formError}
     <p class="error">{formError}</p>
   {/if}
 
   <Form>
-    <FormGroup>
-      <Label for="listName">Name:</Label>
+    <FormGroup floating label="List ID">
       <Input
         type="text"
-        id="listName"
-        bind:value={newListName}
-        placeholder="e.g., fiction, groceries, etc."
+        id="listId"
+        bind:value={listId}
+        placeholder="my-list"
+      />
+    </FormGroup>
+    <FormGroup floating label="Display Name">
+      <Input
+        type="text"
+        id="displayName"
+        bind:value={displayName}
+        placeholder="My List"
       />
     </FormGroup>
     <div class="form-actions">

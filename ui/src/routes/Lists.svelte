@@ -5,7 +5,7 @@
   import List from './List.svelte';
   import AddListForm from './AddListForm.svelte';
 
-  let listsByType = {};
+  let listsByType = /** @type {Record<string, Array<{type: string, name: string}>>} */ ({});
   let loading = true;
   /** @type string? */
   let errorMessage = "";
@@ -39,7 +39,7 @@
       loading = false;
     } catch (e) {
       console.error('Error fetching lists:', e);
-      errorMessage = e.message;
+      errorMessage = e instanceof Error ? e.message : String(e);
       loading = false;
     }
   }
@@ -52,8 +52,13 @@
   /** @type string? */
   let activeListType = null;
 
+  /** @param {string} type */
   const toggleActiveList = (type) => activeListType = activeListType === type ? null : type;
 
+  /**
+   * @param {string} type
+   * @param {string} name
+   */
   async function deleteList(type, name) {
     if (!confirm(`Are you sure you want to delete the list "${name}" of type "${type}"?`)) {
       return;
@@ -76,7 +81,7 @@
       await fetchLists();
     } catch (e) {
       console.error('Error deleting list:', e);
-      errorMessage = e.message;
+      errorMessage = e instanceof Error ? e.message : String(e);
     }
   }
 </script>
