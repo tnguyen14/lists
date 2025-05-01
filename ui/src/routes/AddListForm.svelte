@@ -1,6 +1,6 @@
 <script>
   import { PUBLIC_API_URL } from '$env/static/public';
-  import { Button, Input, Form, FormGroup, Label } from '@sveltestrap/sveltestrap';
+  import { Button, Input, Form, FormGroup } from '@sveltestrap/sveltestrap';
   import { token } from '$lib/stores/auth';
 
   export let onSuccess = () => {};
