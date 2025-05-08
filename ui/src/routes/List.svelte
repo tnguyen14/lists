@@ -5,6 +5,11 @@
 	import { token } from '$lib/stores/auth';
 
 	/**
+	 * @template T
+	 * @typedef {import('svelte/store').Writable<T>} WritableStore
+	 */
+
+	/**
 	 * @typedef {Object} ListType
 	 * @property {string} name - The name of the list
 	 * @property {string} type - The type of the list
@@ -50,16 +55,6 @@
 		return Array.isArray(list[key]) ? list[key] : [];
 	}
 
-	/**
-	 * Remove a user from a permission list
-	 * @param {PermissionKey} permType - The permission type key
-	 * @param {string} user - The user to remove
-	 */
-	function removeUser(permType, user) {
-		// Function implementation intentionally left blank
-		console.log(`Remove user ${user} from ${permType} requested`);
-	}
-
 	let listName = '';
 	if (list) {
 		if (list.name) {
@@ -82,13 +77,40 @@
 	};
 
 	/**
-	 * @type {Record<PermissionKey, string[]>}
+	 * @typedef {Record<PermissionKey, string[]>} UserPermissionsRecord
+	 */
+
+	/**
+	 * Store for tracking newly added users that haven't been saved yet
+	 * @type {WritableStore<UserPermissionsRecord>}
 	 */
 	const newUsers = writable({
 		admins: [],
 		editors: [],
 		viewers: []
 	});
+
+	/**
+	 * Remove a user from a permission list
+	 * @param {PermissionKey} permType - The permission type key
+	 * @param {string} user - The user to remove
+	 */
+	function removeUser(permType, user) {
+		// Function implementation intentionally left blank
+		console.log(`Remove user ${user} from ${permType} requested`);
+	}
+
+  /**
+   * Add a user to a permission list
+   * @param {PermissionKey} permType - The permission type key
+   * @param {string} user - The user to add
+   */
+  function addUser(permType, user) {
+    newUsers.update(current => ({
+      ...current,
+      [permType]: [...current[permType], user]
+    }));
+  }
 
 	/**
 	 * Handle the form submission
@@ -164,12 +186,8 @@
 										color="primary"
 										size="sm"
 										title="Add user"
-										on:click={(e) => {
-											e.stopPropagation();
-											newUsers.set({
-												...$newUsers,
-												[permType.key]: [...$newUsers[permType.key], userInputs[permType.key]]
-											});
+										on:click={() => {
+                      addUser(permType.key, userInputs[permType.key]);
 											userInputs[permType.key] = '';
 										}}
 										>+
