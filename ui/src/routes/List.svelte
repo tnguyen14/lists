@@ -15,9 +15,9 @@
 	 * @property {string} type - The type of the list
 	 * @property {Object} [meta] - Optional metadata
 	 * @property {string} [meta.displayName] - Optional display name
-	 * @property {string[]} [admins] - List of admin users
-	 * @property {string[]} [editors] - List of editor users
-	 * @property {string[]} [viewers] - List of viewer users
+	 * @property {string[]} admins - List of admin users
+	 * @property {string[]} editors - List of editor users
+	 * @property {string[]} viewers - List of viewer users
 	 */
 
 	/**
@@ -45,15 +45,7 @@
 		{ key: 'viewers', label: 'Viewers' }
 	];
 
-	/**
-	 * Helper function to safely get users for a permission type
-	 * @param {ListType} list - The list object
-	 * @param {PermissionKey} key - The permission key
-	 * @returns {string[]} Array of users with that permission
-	 */
-	function getPermissionUsers(list, key) {
-		return Array.isArray(list[key]) ? list[key] : [];
-	}
+	// No helper function needed - we'll use direct access with type assertions
 
 	let listName = '';
 	if (list) {
@@ -91,13 +83,34 @@
 	});
 
 	/**
+	 * Store for tracking users to be removed that haven't been saved yet
+	 * @type {WritableStore<UserPermissionsRecord>}
+	 */
+	const removedUsers = writable({
+		admins: [],
+		editors: [],
+		viewers: []
+	});
+
+	/**
 	 * Remove a user from a permission list
 	 * @param {PermissionKey} permType - The permission type key
 	 * @param {string} user - The user to remove
 	 */
 	function removeUser(permType, user) {
-		// Function implementation intentionally left blank
-		console.log(`Remove user ${user} from ${permType} requested`);
+		if ($newUsers[permType].includes(user)) {
+			// If the user is in newUsers, just remove them from there
+			newUsers.update(current => ({
+				...current,
+				[permType]: current[permType].filter(u => u !== user)
+			}));
+		} else {
+			// If the user is not in newUsers, add them to the removedUsers store
+			removedUsers.update(current => ({
+				...current,
+				[permType]: [...current[permType], user]
+			}));
+		}
 	}
 
   /**
@@ -106,6 +119,11 @@
    * @param {string} user - The user to add
    */
   function addUser(permType, user) {
+    // Check if user already exists
+    if (list[permType]?.includes(user) || $newUsers[permType].includes(user)) {
+      return;
+    }
+
     newUsers.update(current => ({
       ...current,
       [permType]: [...current[permType], user]
@@ -147,11 +165,11 @@
 				}
 			</style>
 			{#each permissionTypes as permType}
-				{#if getPermissionUsers(list, permType.key).length > 0}
+				{#if list[permType.key]?.length > 0}
 					<div class="permission-group">
 						<h5 class="permission-label">{permType.label}:</h5>
 						<ul class="permission-list">
-							{#each getPermissionUsers(list, permType.key) as user}
+							{#each /** @type {string[]} */ (list[permType.key]) as user}
 								<li class="existing-user">
 									<span>{user}</span>
 									<Button
