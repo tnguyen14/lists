@@ -8,7 +8,15 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { base } from '$app/paths';
-	import { isAuthenticated, user, authStatus, token, AUTH_STATUSES, errorMessage, isSuperAdmin } from '$lib/stores/auth.js';
+	import {
+		isAuthenticated,
+		user,
+		authStatus,
+		token,
+		AUTH_STATUSES,
+		errorMessage,
+		isSuperAdmin
+	} from '$lib/stores/auth.js';
 	import createAuth from '@tridnguyen/auth/spa';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import Lists from './Lists.svelte';
@@ -26,7 +34,7 @@
 		try {
 			// First check if the user is authenticated
 			const authenticated = await auth0.isAuthenticated();
-			console.log("Authentication check in loadAuth:", authenticated);
+			console.log('Authentication check in loadAuth:', authenticated);
 			isAuthenticated.set(authenticated);
 
 			if (!authenticated) {
@@ -40,7 +48,7 @@
 			const accessToken = await auth0.getTokenSilently({
 				authorizationParams: {
 					audience: 'https://lists.cloud.tridnguyen.com',
-					scope: 'read:list write:list',
+					scope: 'read:list write:list'
 				}
 			});
 
@@ -57,7 +65,7 @@
 			try {
 				const response = await fetch(`${PUBLIC_API_URL}/me`, {
 					headers: {
-						'Authorization': `Bearer ${accessToken}`,
+						Authorization: `Bearer ${accessToken}`,
 						'Content-Type': 'application/json'
 					}
 				});
@@ -113,22 +121,24 @@
 		});
 
 		// Handle redirect callback if present in URL
-		if (location.search.includes("state=") &&
-			(location.search.includes("code=") || location.search.includes("error="))) {
-			console.log("Handling auth callback");
+		if (
+			location.search.includes('state=') &&
+			(location.search.includes('code=') || location.search.includes('error='))
+		) {
+			console.log('Handling auth callback');
 			authStatus.set(AUTH_STATUSES.pendingVerify);
 
 			try {
 				await auth0.handleRedirectCallback();
-				console.log("Callback handled successfully");
+				console.log('Callback handled successfully');
 
 				// After handling callback, load auth state
 				await loadAuth();
 
 				// Clear URL parameters
-				goto(`/${base}`, {replaceState: true});
+				goto(`/${base}`, { replaceState: true });
 			} catch (e) {
-				console.error("Error handling callback:", e);
+				console.error('Error handling callback:', e);
 				authStatus.set(AUTH_STATUSES.error);
 				isAuthenticated.set(false);
 				user.set({});
@@ -174,20 +184,20 @@
 	<h1>Lists</h1>
 	<p>{$authStatus}</p>
 	<p>{$errorMessage}</p>
-		{#if $isAuthenticated}
+	{#if $isAuthenticated}
 		<p>
 			<Button on:click={logout}>Log Out</Button>
 		</p>
-			{#if $isSuperAdmin}
-				<Lists />
-			{:else}
-				<p>User is not a super admin</p>
-			{/if}
+		{#if $isSuperAdmin}
+			<Lists />
 		{:else}
+			<p>User is not a super admin</p>
+		{/if}
+	{:else}
 		<p>
 			<Button color="primary" on:click={login}>Log In</Button>
 		</p>
-		{/if}
+	{/if}
 </div>
 
 <style>

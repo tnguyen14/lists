@@ -10,7 +10,7 @@ export default defineConfig({
 		host: true
 	},
 	build: {
-		sourcemap: "inline"
+		sourcemap: 'inline'
 	},
 	optimizeDeps: {
 		// This ensures proper handling of source maps for dependencies
