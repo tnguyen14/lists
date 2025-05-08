@@ -1,4 +1,5 @@
 <script>
+  import { writable } from 'svelte/store';
   import { Button, Input, Form } from '@sveltestrap/sveltestrap';
   import { PUBLIC_API_URL } from '$env/static/public';
   import { token } from '$lib/stores/auth';
@@ -74,15 +75,34 @@
   /**
    * @type {Record<PermissionKey, string>}
    */
-  let newUsers = {
+  let userInputs = {
     admins: '',
     editors: '',
     viewers: '',
   }
 
+  /**
+   * @type {Record<PermissionKey, string[]>}
+   */
+  const newUsers = writable({
+    admins: [],
+    editors: [],
+    viewers: [],
+  });
+
+  /**
+   * Handle the form submission
+   * @param {SubmitEvent} e - The form submission event
+   */
   function handleListUpdate(e) {
     e.preventDefault();
-    console.log(e.submitter.value);
+    if (e.submitter && 'value' in e.submitter && e.submitter.value) {
+      console.log("an actual form submission action")
+      console.log(e.submitter.value);
+    }
+  }
+  $: {
+    console.log($newUsers)
   }
 </script>
 
@@ -108,19 +128,41 @@
             <h5 class="permission-label">{permType.label}:</h5>
             <ul class="permission-list">
               {#each getPermissionUsers(list, permType.key) as user}
-                <li class="user">
+                <li class="existing-user">
                   <span>{user}</span>
                   <Button class="remove-user" outline color="danger" size="sm" on:click={() => removeUser(permType.key, user)} title="Remove user">
                     <span style="font-size: 1rem; font-weight: bold;">×</span>
                   </Button>
                 </li>
               {/each}
-              <li>
-                <Input
-                  type="text"
-                  id="new-user-id"
-                  bind:value={newUsers[permType.key]}
-                />
+              {#each $newUsers[permType.key] as user}
+                <li class="new-user">
+                  <span>{user}</span>
+                </li>
+              {/each}
+              <li class="new-user-row">
+                <div class="input-group">
+                  <Input
+                    type="text"
+                    id="new-user-id"
+                    bind:value={userInputs[permType.key]}
+                    placeholder="Add new user"
+                  />
+                </div>
+                <div class="add-btn-container">
+                  <Button
+                    outline
+                    color="primary"
+                    size="sm"
+                    title="Add user"
+                    on:click={(e) => {
+                      e.stopPropagation();
+                      newUsers.set({...$newUsers, [permType.key]: [...$newUsers[permType.key], userInputs[permType.key]]});
+                      userInputs[permType.key] = '';
+                    }}
+                  >+
+                  </Button>
+                </div>
               </li>
             </ul>
           </div>
@@ -177,7 +219,20 @@
     list-style-type: disc;
   }
 
-  .user {
+  .permission-list li {
     margin-bottom: 0.5rem;
   }
+
+  .new-user-row {
+    position: relative;
+    padding-right: 3rem;
+  }
+
+  .new-user-row .add-btn-container {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  /* Button styling is applied inline */
 </style>
