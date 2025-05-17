@@ -100,35 +100,47 @@
 	function removeUser(permType, user) {
 		if ($newUsers[permType].includes(user)) {
 			// If the user is in newUsers, just remove them from there
-			newUsers.update(current => ({
+			newUsers.update((current) => ({
 				...current,
-				[permType]: current[permType].filter(u => u !== user)
+				[permType]: current[permType].filter((u) => u !== user)
 			}));
-		} else {
-			// If the user is not in newUsers, add them to the removedUsers store
-			removedUsers.update(current => ({
-				...current,
-				[permType]: [...current[permType], user]
-			}));
+			return;
 		}
+		// If the user is not in newUsers, add them to the removedUsers store
+		removedUsers.update((current) => ({
+			...current,
+			[permType]: [...current[permType], user]
+		}));
 	}
 
-  /**
-   * Add a user to a permission list
-   * @param {PermissionKey} permType - The permission type key
-   * @param {string} user - The user to add
-   */
-  function addUser(permType, user) {
-    // Check if user already exists
-    if (list[permType]?.includes(user) || $newUsers[permType].includes(user)) {
-      return;
-    }
+	/**
+	 * Restore a previously marked user (remove from removedUsers list)
+	 * @param {PermissionKey} permType - The permission type key
+	 * @param {string} user - The user to restore
+	 */
+	function restoreUser(permType, user) {
+		removedUsers.update(current => ({
+			...current,
+			[permType]: current[permType].filter(u => u !== user)
+		}));
+	}
 
-    newUsers.update(current => ({
-      ...current,
-      [permType]: [...current[permType], user]
-    }));
-  }
+	/**
+	 * Add a user to a permission list
+	 * @param {PermissionKey} permType - The permission type key
+	 * @param {string} user - The user to add
+	 */
+	function addUser(permType, user) {
+		// Check if user already exists
+		if (list[permType]?.includes(user) || $newUsers[permType].includes(user)) {
+			return;
+		}
+
+		newUsers.update((current) => ({
+			...current,
+			[permType]: [...current[permType], user]
+		}));
+	}
 
 	/**
 	 * Handle the form submission
@@ -158,20 +170,39 @@
 		<div class="permissions">
 			<h4>Permissions</h4>
 			<style>
-				.remove-user {
+				.remove-user,
+				.restore-user {
 					margin-left: 0.5rem;
 					line-height: 1;
 					padding-top: 0;
 				}
+				.restore-user {
+					padding-top: 0.2rem;
+				}
 			</style>
 			{#each permissionTypes as permType}
-				{#if list[permType.key]?.length > 0}
-					<div class="permission-group">
-						<h5 class="permission-label">{permType.label}:</h5>
-						<ul class="permission-list">
-							{#each /** @type {string[]} */ (list[permType.key]) as user}
-								<li class="existing-user">
-									<span>{user}</span>
+				<div class="permission-group">
+					<h5 class="permission-label">{permType.label}:</h5>
+					<ul class="permission-list">
+						{#each list[permType.key] as user}
+							<li class="existing-user">
+								<span class={$removedUsers[permType.key]?.includes(user) ? 'removed-user' : ''}>
+									{user}
+								</span>
+								{#if $removedUsers[permType.key]?.includes(user)}
+									<!-- Show restore button for marked users -->
+									<Button
+										class="restore-user"
+										outline
+										color="success"
+										size="sm"
+										on:click={() => restoreUser(permType.key, user)}
+										title="Restore user"
+									>
+										<span style="font-size: 0.9rem;">↩</span>
+									</Button>
+								{:else}
+									<!-- Show remove button for regular users -->
 									<Button
 										class="remove-user"
 										outline
@@ -182,39 +213,49 @@
 									>
 										<span style="font-size: 1rem; font-weight: bold;">×</span>
 									</Button>
-								</li>
-							{/each}
-							{#each $newUsers[permType.key] as user}
-								<li class="new-user">
-									<span>{user}</span>
-								</li>
-							{/each}
-							<li class="new-user-row">
-								<div class="input-group">
-									<Input
-										type="text"
-										id="new-user-id"
-										bind:value={userInputs[permType.key]}
-										placeholder="Add new user"
-									/>
-								</div>
-								<div class="add-btn-container">
-									<Button
-										outline
-										color="primary"
-										size="sm"
-										title="Add user"
-										on:click={() => {
-                      addUser(permType.key, userInputs[permType.key]);
-											userInputs[permType.key] = '';
-										}}
-										>+
-									</Button>
-								</div>
+								{/if}
 							</li>
-						</ul>
-					</div>
-				{/if}
+						{/each}
+						{#each $newUsers[permType.key] as user}
+							<li class="new-user">
+								<span>{user}</span>
+								<Button
+									class="remove-user"
+									outline
+									color="danger"
+									size="sm"
+									on:click={() => removeUser(permType.key, user)}
+									title="Remove user"
+								>
+									<span style="font-size: 1rem; font-weight: bold;">×</span>
+								</Button>
+							</li>
+						{/each}
+						<li class="new-user-row">
+							<div class="input-group">
+								<Input
+									type="text"
+									id="new-user-id"
+									bind:value={userInputs[permType.key]}
+									placeholder="Add new user"
+								/>
+							</div>
+							<div class="add-btn-container">
+								<Button
+									outline
+									color="primary"
+									size="sm"
+									title="Add user"
+									on:click={() => {
+										addUser(permType.key, userInputs[permType.key]);
+										userInputs[permType.key] = '';
+									}}
+									>+
+								</Button>
+							</div>
+						</li>
+					</ul>
+				</div>
 			{/each}
 		</div>
 	</Form>
