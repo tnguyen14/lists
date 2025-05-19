@@ -126,9 +126,9 @@
 	 * @param {string} user - The user to restore
 	 */
 	function restoreUser(permType, user) {
-		removedUsers.update(current => ({
+		removedUsers.update((current) => ({
 			...current,
-			[permType]: current[permType].filter(u => u !== user)
+			[permType]: current[permType].filter((u) => u !== user)
 		}));
 	}
 
@@ -170,20 +170,20 @@
 
 			// Update each permission type
 			permissionTypes.forEach(({ key }) => {
-				$newUsers[key].forEach(user => {
+				$newUsers[key].forEach((user) => {
 					updatedPermissions[key].push(user);
 				});
 
 				// Remove users that were marked for removal
-				updatedPermissions[key] = updatedPermissions[key].filter(user =>
-					!$removedUsers[key].includes(user)
+				updatedPermissions[key] = updatedPermissions[key].filter(
+					(user) => !$removedUsers[key].includes(user)
 				);
 			});
 
 			const response = await fetch(`${PUBLIC_API_URL}/${list.type}/${list.name}`, {
 				method: 'PATCH',
 				headers: {
-					'Authorization': `Bearer ${$token}`,
+					Authorization: `Bearer ${$token}`,
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify(updatedPermissions)
@@ -216,17 +216,12 @@
 	 * Derived store to check if there are any pending changes
 	 * @type {import('svelte/store').Readable<boolean>}
 	 */
-	const hasPendingChanges = derived(
-		[newUsers, removedUsers],
-		([$newUsers, $removedUsers]) => {
-			// Check if any permission type has new or removed users
-			return permissionTypes.some(
-				(type) =>
-					$newUsers[type.key].length > 0 ||
-					$removedUsers[type.key].length > 0
-			);
-		}
-	);
+	const hasPendingChanges = derived([newUsers, removedUsers], ([$newUsers, $removedUsers]) => {
+		// Check if any permission type has new or removed users
+		return permissionTypes.some(
+			(type) => $newUsers[type.key].length > 0 || $removedUsers[type.key].length > 0
+		);
+	});
 
 	$: {
 		console.log($newUsers);
@@ -240,12 +235,14 @@
 			<Button type="submit" value="update" disabled={!$hasPendingChanges || isUpdating}>
 				{isUpdating ? 'Updating' : 'Update'}
 			</Button>
-			<Button color="danger" size="sm" on:click={(e) => {
-				e.stopPropagation();
-				e.preventDefault();
-				onDelete(list.type, list.name)
-			}}
-				>Delete</Button
+			<Button
+				color="danger"
+				size="sm"
+				on:click={(e) => {
+					e.stopPropagation();
+					e.preventDefault();
+					onDelete(list.type, list.name);
+				}}>Delete</Button
 			>
 		</div>
 		<div class="permissions">
