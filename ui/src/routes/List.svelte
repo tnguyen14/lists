@@ -1,5 +1,5 @@
 <script>
-	import { writable } from 'svelte/store';
+	import { writable, derived } from 'svelte/store';
 	import { Button, Input, Form } from '@sveltestrap/sveltestrap';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { token } from '$lib/stores/auth';
@@ -153,6 +153,23 @@
 			console.log(e.submitter.value);
 		}
 	}
+
+	/**
+	 * Derived store to check if there are any pending changes
+	 * @type {import('svelte/store').Readable<boolean>}
+	 */
+	const hasPendingChanges = derived(
+		[newUsers, removedUsers],
+		([$newUsers, $removedUsers]) => {
+			// Check if any permission type has new or removed users
+			return permissionTypes.some(
+				(type) =>
+					$newUsers[type.key].length > 0 ||
+					$removedUsers[type.key].length > 0
+			);
+		}
+	);
+
 	$: {
 		console.log($newUsers);
 	}
@@ -162,7 +179,7 @@
 	<Form on:submit={handleListUpdate}>
 		<div class="list-header">
 			<h3 class="list-name">{listName}</h3>
-			<Button value="update">Update</Button>
+			<Button value="update" disabled={!$hasPendingChanges}>Update</Button>
 			<Button color="danger" size="sm" on:click={() => onDelete(list.type, list.name)}
 				>Delete</Button
 			>
@@ -312,6 +329,10 @@
 		margin-bottom: 0.5rem;
 	}
 
+	.permission-list .removed-user {
+		text-decoration: line-through;
+		color: #888;
+	}
 	.new-user-row {
 		position: relative;
 		padding-right: 3rem;
@@ -323,5 +344,4 @@
 		top: 50%;
 		transform: translateY(-50%);
 	}
-	/* Button styling is applied inline */
 </style>
