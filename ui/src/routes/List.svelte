@@ -37,6 +37,16 @@
 	 */
 
 	/**
+	 * Initial state for permission updates tracking
+	 * @type {Record<PermissionKey, string[]>}
+	 */
+	const INITIAL_PERMISSIONS_UPDATE_STATE = {
+		admins: [],
+		editors: [],
+		viewers: []
+	};
+
+	/**
 	 * @type {Array<{key: PermissionKey, label: string}>}
 	 */
 	const permissionTypes = [
@@ -76,21 +86,13 @@
 	 * Store for tracking newly added users that haven't been saved yet
 	 * @type {WritableStore<UserPermissionsRecord>}
 	 */
-	const newUsers = writable({
-		admins: [],
-		editors: [],
-		viewers: []
-	});
+	const newUsers = writable({ ...INITIAL_PERMISSIONS_UPDATE_STATE });
 
 	/**
 	 * Store for tracking users to be removed that haven't been saved yet
 	 * @type {WritableStore<UserPermissionsRecord>}
 	 */
-	const removedUsers = writable({
-		admins: [],
-		editors: [],
-		viewers: []
-	});
+	const removedUsers = writable({ ...INITIAL_PERMISSIONS_UPDATE_STATE });
 
 	/**
 	 * Remove a user from a permission list
@@ -146,11 +148,56 @@
 	 * Handle the form submission
 	 * @param {SubmitEvent} e - The form submission event
 	 */
-	function handleListUpdate(e) {
+	async function handleListUpdate(e) {
 		e.preventDefault();
-		if (e.submitter && 'value' in e.submitter && e.submitter.value) {
-			console.log('an actual form submission action');
-			console.log(e.submitter.value);
+
+		// @ts-ignore - submitter and value properties exist at runtime
+		if (e.submitter?.value !== 'update') return;
+
+		if (!$hasPendingChanges) return;
+
+		try {
+			// Start with a copy of the existing list
+			const updatedPermissions = { ...list };
+
+			// Update each permission type
+			permissionTypes.forEach(({ key }) => {
+				$newUsers[key].forEach(user => {
+					updatedPermissions[key].push(user);
+				});
+
+				// Remove users that were marked for removal
+				updatedPermissions[key] = updatedPermissions[key].filter(user =>
+					!$removedUsers[key].includes(user)
+				);
+			});
+
+			const response = await fetch(`${PUBLIC_API_URL}/${list.type}/${list.name}`, {
+				method: 'PATCH',
+				headers: {
+					'Authorization': `Bearer ${$token}`,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(updatedPermissions)
+			});
+
+			if (!response.ok) {
+				throw new Error(`API error: ${response.status}`);
+			}
+
+			// Update was successful, clear the pending changes
+			newUsers.set({ ...INITIAL_PERMISSIONS_UPDATE_STATE });
+			removedUsers.set({ ...INITIAL_PERMISSIONS_UPDATE_STATE });
+
+			// TODO: instead of updating the new values locally,
+			// trigger an event and have the parent component retrieve the
+			// updated list data and pass that down through the prop
+			list = { ...updatedPermissions };
+
+			console.log('List updated successfully');
+		} catch (error) {
+			console.error('Error updating list:', error);
+			// Here you could add error handling logic, like showing a notification
 		}
 	}
 
@@ -179,8 +226,12 @@
 	<Form on:submit={handleListUpdate}>
 		<div class="list-header">
 			<h3 class="list-name">{listName}</h3>
-			<Button value="update" disabled={!$hasPendingChanges}>Update</Button>
-			<Button color="danger" size="sm" on:click={() => onDelete(list.type, list.name)}
+			<Button type="submit" value="update" disabled={!$hasPendingChanges}>Update</Button>
+			<Button color="danger" size="sm" on:click={(e) => {
+				e.stopPropagation();
+				e.preventDefault();
+				onDelete(list.type, list.name)
+			}}
 				>Delete</Button
 			>
 		</div>
