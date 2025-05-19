@@ -1,6 +1,6 @@
 <script>
 	import { writable, derived } from 'svelte/store';
-	import { Button, Input, Form } from '@sveltestrap/sveltestrap';
+	import { Button, Input, Form, Icon } from '@sveltestrap/sveltestrap';
 	import { PUBLIC_API_URL } from '$env/static/public';
 	import { token } from '$lib/stores/auth';
 
@@ -255,7 +255,6 @@
 				.restore-user {
 					margin-left: 0.5rem;
 					line-height: 1;
-					padding-top: 0;
 				}
 				.restore-user {
 					padding-top: 0.2rem;
@@ -280,7 +279,7 @@
 										on:click={() => restoreUser(permType.key, user)}
 										title="Restore user"
 									>
-										<span style="font-size: 0.9rem;">↩</span>
+										<Icon name="arrow-counterclockwise" />
 									</Button>
 								{:else}
 									<!-- Show remove button for regular users -->
@@ -292,7 +291,7 @@
 										on:click={() => removeUser(permType.key, user)}
 										title="Remove user"
 									>
-										<span style="font-size: 1rem; font-weight: bold;">×</span>
+										<Icon name="x" />
 									</Button>
 								{/if}
 							</li>
@@ -308,7 +307,7 @@
 									on:click={() => removeUser(permType.key, user)}
 									title="Remove user"
 								>
-									<span style="font-size: 1rem; font-weight: bold;">×</span>
+									<Icon name="x" />
 								</Button>
 							</li>
 						{/each}
@@ -331,7 +330,8 @@
 										addUser(permType.key, userInputs[permType.key]);
 										userInputs[permType.key] = '';
 									}}
-									>+
+								>
+									<Icon name="plus" />
 								</Button>
 							</div>
 						</li>
