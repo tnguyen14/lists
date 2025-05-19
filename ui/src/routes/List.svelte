@@ -79,6 +79,11 @@
 	};
 
 	/**
+	 * Tracks whether an update is in progress
+	 */
+	let isUpdating = false;
+
+	/**
 	 * @typedef {Record<PermissionKey, string[]>} UserPermissionsRecord
 	 */
 
@@ -156,6 +161,9 @@
 
 		if (!$hasPendingChanges) return;
 
+		// Set updating state to true
+		isUpdating = true;
+
 		try {
 			// Start with a copy of the existing list
 			const updatedPermissions = { ...list };
@@ -198,6 +206,9 @@
 		} catch (error) {
 			console.error('Error updating list:', error);
 			// Here you could add error handling logic, like showing a notification
+		} finally {
+			// Reset updating state regardless of success or failure
+			isUpdating = false;
 		}
 	}
 
@@ -226,7 +237,9 @@
 	<Form on:submit={handleListUpdate}>
 		<div class="list-header">
 			<h3 class="list-name">{listName}</h3>
-			<Button type="submit" value="update" disabled={!$hasPendingChanges}>Update</Button>
+			<Button type="submit" value="update" disabled={!$hasPendingChanges || isUpdating}>
+				{isUpdating ? 'Updating' : 'Update'}
+			</Button>
 			<Button color="danger" size="sm" on:click={(e) => {
 				e.stopPropagation();
 				e.preventDefault();
