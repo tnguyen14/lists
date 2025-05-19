@@ -312,7 +312,7 @@
 								</Button>
 							</li>
 						{/each}
-						<li class="new-user-row">
+						<li class="add-new-user">
 							<div class="input-group">
 								<Input
 									type="text"
@@ -397,12 +397,17 @@
 		text-decoration: line-through;
 		color: #888;
 	}
-	.new-user-row {
+
+	.permission-list .new-user {
+		color: #2c6baa;
+	}
+
+	.add-new-user {
 		position: relative;
 		padding-right: 3rem;
 	}
 
-	.new-user-row .add-btn-container {
+	.add-new-user .add-btn-container {
 		position: absolute;
 		right: 0;
 		top: 50%;
