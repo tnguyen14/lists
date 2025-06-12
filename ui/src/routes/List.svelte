@@ -55,8 +55,6 @@
 		{ key: 'viewers', label: 'Viewers' }
 	];
 
-	// No helper function needed - we'll use direct access with type assertions
-
 	let listName = '';
 	if (list) {
 		if (list.name) {
@@ -67,6 +65,14 @@
 		if (list.meta && list.meta.displayName) {
 			listName = `${list.meta.displayName} (${list.name})`;
 		}
+
+		// check for potential missing permissions array
+		permissionTypes.forEach((permType) => {
+			if (!list[permType.key]) {
+				console.log(`list ${list.name} is missing permissions for ${permType.key}`)
+				list[permType.key] = [];
+			}
+		})
 	}
 
 	/**
