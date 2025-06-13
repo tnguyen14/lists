@@ -5,9 +5,11 @@
 
 	export let onSuccess = () => {};
 	export let onCancel = () => {};
-	export let listType = '';
+	/** @type string[] */
+	export let listTypes = [];
 
 	// Form state
+	let listType = '';
 	let listId = '';
 	let displayName = ''; // Added field for display name
 	let isSubmitting = false;
@@ -16,6 +18,10 @@
 	async function createList() {
 		if (!listId) {
 			formError = 'List ID is required';
+			return;
+		}
+		if (!listType) {
+			formError = 'List type is required';
 			return;
 		}
 
@@ -57,13 +63,20 @@
 </script>
 
 <div class="add-form">
-	<h5>Add a new <em>{listType}</em> list</h5>
+	<h5>Add a new list</h5>
 
 	{#if formError}
 		<p class="error">{formError}</p>
 	{/if}
 
 	<Form>
+		<FormGroup floating label="List Type">
+			<Input type="select" id="listTypeSelect" bind:value={listType}>
+				{#each listTypes as type}
+					<option value={type}>{type}</option>
+				{/each}
+			</Input>
+		</FormGroup>
 		<FormGroup floating label="List ID">
 			<Input type="text" id="listId" bind:value={listId} placeholder="my-list" />
 		</FormGroup>

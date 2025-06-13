@@ -5,7 +5,10 @@
 	import List from './List.svelte';
 	import AddListForm from './AddListForm.svelte';
 
-	let listsByType = /** @type {Record<string, Array<{type: string, name: string}>>} */ ({});
+	/**
+	 * @typedef {import('$lib/types').List} List
+	 */
+	let listsByType = /** @type {Record<string, List[]>} */ ({});
 	let loading = true;
 	/** @type string? */
 	let errorMessage = '';
@@ -34,7 +37,7 @@
 			}
 
 			const fetchedLists = await response.json();
-			listsByType = Object.groupBy(fetchedLists, (list) => list.type);
+			listsByType = /** @type {Record<string, List[]>} */ (Object.groupBy(fetchedLists, (list) => list.type));
 			console.log('Lists by type:', listsByType);
 			loading = false;
 		} catch (e) {
@@ -48,16 +51,13 @@
 		fetchLists();
 	}
 
-	// Track which list type section has an active add form
-	/** @type string? */
-	let activeListType = null;
-
-	/** @param {string} type */
-	const toggleActiveList = (type) => (activeListType = activeListType === type ? null : type);
+	/** @type {boolean} */
+	let showAddForm = false;
 
 	/**
-	 * @param {string} type
-	 * @param {string} name
+	 * Delete a list with the specified type and name
+	 * @param {string} type - The type of the list to delete
+	 * @param {string} name - The name of the list to delete
 	 */
 	async function deleteList(type, name) {
 		if (!confirm(`Are you sure you want to delete the list "${name}" of type "${type}"?`)) {
@@ -87,6 +87,27 @@
 </script>
 
 <div class="lists-container">
+	<div class="add-list-section">
+		<Button
+			color={showAddForm ? "secondary" : "success"}
+			on:click={() => showAddForm = !showAddForm}
+		>
+			{showAddForm ? 'Cancel' : 'Add New List'}
+		</Button>
+
+		{#if showAddForm}
+			<div class="add-form-container">
+				<AddListForm
+					listTypes={Object.keys(listsByType)}
+					onSuccess={() => {
+						showAddForm = false;
+						fetchLists();
+					}}
+					onCancel={() => showAddForm = false}
+				/>
+			</div>
+		{/if}
+	</div>
 	{#if loading}
 		<p>Getting lists...</p>
 	{:else if errorMessage}
@@ -99,27 +120,7 @@
 				<section class="list-type">
 					<div class="list-type-header">
 						<h3>{listType}</h3>
-						<Button
-							color={activeListType === listType ? 'secondary' : 'success'}
-							size="sm"
-							on:click={() => toggleActiveList(listType)}
-						>
-							{activeListType === listType ? 'Cancel' : `Add ${listType} List`}
-						</Button>
 					</div>
-
-					{#if activeListType === listType}
-						<div class="type-specific-form">
-							<AddListForm
-								{listType}
-								onSuccess={() => {
-									activeListType = null;
-									fetchLists();
-								}}
-								onCancel={() => (activeListType = null)}
-							/>
-						</div>
-					{/if}
 
 					<div class="lists">
 						{#each listsByType[listType] as list (list.name)}
@@ -150,6 +151,10 @@
 		border-radius: 8px;
 		box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 		padding: 1.25rem;
+	}
+
+	.add-form-container {
+		margin-top: 1rem;
 	}
 
 	.lists {
