@@ -6,6 +6,7 @@ require("dotenv").config();
 // might want to create a separate metadata db/ store
 const publicAccess = {
   GET: ["/read/.*/items"],
+  POST: ["/forms/.*"],
 };
 
 const server = require("@tridnguyen/fastify-server")({
