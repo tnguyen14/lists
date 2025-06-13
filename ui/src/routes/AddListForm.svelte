@@ -9,19 +9,25 @@
 	export let listTypes = [];
 
 	// Form state
-	let listType = '';
+	let listTypeSelection = '';
+	let customListType = '';
 	let listId = '';
 	let displayName = ''; // Added field for display name
 	let isSubmitting = false;
 	let formError = '';
+
+	$: listType = listTypeSelection === '__new__' ? customListType : listTypeSelection;
 
 	async function createList() {
 		if (!listId) {
 			formError = 'List ID is required';
 			return;
 		}
+
 		if (!listType) {
-			formError = 'List type is required';
+			formError = listTypeSelection === '__new__'
+				? 'New list type is required'
+				: 'List type is required';
 			return;
 		}
 
@@ -51,7 +57,9 @@
 
 			// Reset form and notify parent
 			listId = '';
-			displayName = ''; // Reset display name
+			displayName = '';
+			listTypeSelection = '';
+			customListType = '';
 			onSuccess();
 		} catch (e) {
 			formError = e.message;
@@ -71,12 +79,25 @@
 
 	<Form>
 		<FormGroup floating label="List Type">
-			<Input type="select" id="listTypeSelect" bind:value={listType}>
+			<Input type="select" id="listTypeSelect" bind:value={listTypeSelection}>
 				{#each listTypes as type}
 					<option value={type}>{type}</option>
 				{/each}
+				<option value="__new__">Create New Type</option>
 			</Input>
 		</FormGroup>
+
+		{#if listTypeSelection === "__new__"}
+			<FormGroup floating label="New List Type">
+				<Input
+					type="text"
+					id="newListType"
+					bind:value={customListType}
+					placeholder="Enter new list type"
+				/>
+			</FormGroup>
+		{/if}
+
 		<FormGroup floating label="List ID">
 			<Input type="text" id="listId" bind:value={listId} placeholder="my-list" />
 		</FormGroup>
@@ -112,5 +133,9 @@
 		color: #d32f2f;
 		font-weight: 500;
 		margin-bottom: 1rem;
+	}
+
+	:global(option[value="__new__"]) {
+		color: #2c6baa;
 	}
 </style>
